@@ -1,9 +1,9 @@
 {
 	"id": "obsidian-simple-time-tracker",
-	"name": "Simple Time Tracker",
+	"name": "Super Simple Time Tracker",
 	"version": "0.0.1",
 	"minAppVersion": "0.15.0",
-	"description": "Simple time tracker plugin for Obsidian.",
+	"description": "Multi-purpose time trackers for your notes!",
 	"author": "Ellpeck",
 	"authorUrl": "https://ellpeck.de",
 	"isDesktopOnly": false

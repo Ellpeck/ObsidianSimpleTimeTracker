@@ -12,9 +12,9 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
 
     display(): void {
         this.containerEl.empty();
-        this.containerEl.createEl("h2", { text: "Simple Time Tracker Settings" });
+        this.containerEl.createEl("h2", { text: "Super Simple Time Tracker Settings" });
 
-        // TODO settings go here
+        this.containerEl.createEl("p", { text: "Settings coming soon!" });
 
         this.containerEl.createEl("hr");
         this.containerEl.createEl("p", { text: "If you like this plugin and want to support its development, you can do so through my website by clicking this fancy image!" });

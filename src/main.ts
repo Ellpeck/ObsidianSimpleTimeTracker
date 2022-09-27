@@ -20,7 +20,7 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
 
 		this.addCommand({
 			id: `insert-simple-time-tracker`,
-			name: `Insert Simple Time Tracker`,
+			name: `Insert Time Tracker`,
 			editorCallback: (e, _) => {
 				e.replaceSelection("```simple-time-tracker\n```\n");
 			}

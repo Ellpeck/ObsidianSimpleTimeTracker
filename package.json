@@ -1,7 +1,7 @@
 {
 	"name": "obsidian-simple-time-tracker",
 	"version": "0.0.1",
-	"description": "Simple time tracker plugin for Obsidian.",
+	"description": "Multi-purpose time trackers for your notes!",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
