@@ -1,4 +1,4 @@
-import { moment, App, MarkdownSectionInformation } from "obsidian";
+import { moment, App, MarkdownSectionInformation, ButtonComponent, TextComponent } from "obsidian";
 
 export class Tracker {
     entries: Entry[];
@@ -52,7 +52,25 @@ export function loadTracker(json: string): Tracker {
     return { entries: [] };
 }
 
-export function displayTracker(tracker: Tracker, element: HTMLElement): void {
+export function displayTracker(tracker: Tracker, element: HTMLElement, getSectionInfo: () => MarkdownSectionInformation): void {
+    // add start/stop controls
+    let running = isRunning(tracker);
+    let btn = new ButtonComponent(element)
+        .setButtonText(running ? "End" : "Start")
+        .onClick(async () => {
+            if (running) {
+                endEntry(tracker);
+            } else {
+                startEntry(tracker, name.getValue());
+            }
+            await saveTracker(tracker, this.app, getSectionInfo());
+        });
+    btn.buttonEl.addClass("simple-time-tracker-btn");
+    let name = new TextComponent(element)
+        .setPlaceholder("Segment name")
+        .setDisabled(running);
+    name.inputEl.addClass("simple-time-tracker-txt");
+
     // add timers
     let timer = element.createDiv({ cls: "simple-time-tracker-timers" });
     let currentDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
