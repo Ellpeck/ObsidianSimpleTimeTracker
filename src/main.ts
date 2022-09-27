@@ -17,6 +17,14 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
 			e.empty();
 			displayTracker(tracker, e, () => i.getSectionInfo(e));
 		});
+
+		this.addCommand({
+			id: `insert-simple-time-tracker`,
+			name: `Insert Simple Time Tracker`,
+			editorCallback: (e, _) => {
+				e.replaceSelection("```simple-time-tracker\n```\n");
+			}
+		});
 	}
 
 	async loadSettings() {

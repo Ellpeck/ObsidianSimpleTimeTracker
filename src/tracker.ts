@@ -77,25 +77,27 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getSectio
     let current = currentDiv.createEl("span", { cls: "simple-time-tracker-timer-time" });
     currentDiv.createEl("span", { text: "Current" });
     let totalDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
-    let total = totalDiv.createEl("span", { cls: "simple-time-tracker-timer-time" });
+    let total = totalDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "0s" });
     totalDiv.createEl("span", { text: "Total" });
 
-    // add list
-    let table = element.createEl("table", { cls: "simple-time-tracker-table" });
-    table.createEl("tr").append(
-        createEl("th", { text: "Segment" }),
-        createEl("th", { text: "Start time" }),
-        createEl("th", { text: "End time" }),
-        createEl("th", { text: "Total" }));
+    // add table
+    if (tracker.entries.length > 0) {
+        let table = element.createEl("table", { cls: "simple-time-tracker-table" });
+        table.createEl("tr").append(
+            createEl("th", { text: "Segment" }),
+            createEl("th", { text: "Start time" }),
+            createEl("th", { text: "End time" }),
+            createEl("th", { text: "Total" }));
 
-    for (let entry of tracker.entries) {
-        let row = table.createEl("tr");
-        row.createEl("td", { text: entry.name });
-        row.createEl("td", { text: moment.unix(entry.startTime).format("YY-MM-DD hh:mm:ss") });
-        if (entry.endTime) {
-            row.createEl("td", { text: moment.unix(entry.endTime).format("YY-MM-DD hh:mm:ss") });
-            let duration = moment.unix(entry.endTime).diff(moment.unix(entry.startTime));
-            row.createEl("td", { text: getCountdownDisplay(moment.duration(duration)) });
+        for (let entry of tracker.entries) {
+            let row = table.createEl("tr");
+            row.createEl("td", { text: entry.name });
+            row.createEl("td", { text: moment.unix(entry.startTime).format("YY-MM-DD hh:mm:ss") });
+            if (entry.endTime) {
+                row.createEl("td", { text: moment.unix(entry.endTime).format("YY-MM-DD hh:mm:ss") });
+                let duration = moment.unix(entry.endTime).diff(moment.unix(entry.startTime));
+                row.createEl("td", { text: getCountdownDisplay(moment.duration(duration)) });
+            }
         }
     }
 
