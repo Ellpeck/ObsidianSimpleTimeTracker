@@ -110,8 +110,7 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getSectio
         }
         setCountdownValues(tracker, current, total, currentDiv);
     }, 1000);
-
-};
+}
 
 function getCountdownDisplay(duration: moment.Duration): string {
     let ret = "";
@@ -126,17 +125,15 @@ function getCountdownDisplay(duration: moment.Duration): string {
 function setCountdownValues(tracker: Tracker, current: HTMLElement, total: HTMLElement, currentDiv: HTMLDivElement) {
     let currEntry = tracker.entries.last();
     if (currEntry) {
-        let currDuration = moment().diff(moment.unix(currEntry.startTime));
-        if (!currEntry.endTime)
+        if (!currEntry.endTime) {
+            let currDuration = moment().diff(moment.unix(currEntry.startTime));
             current.setText(getCountdownDisplay(moment.duration(currDuration)));
+        }
 
         let totalDuration = 0;
         for (let entry of tracker.entries) {
-            if (entry == currEntry && !currEntry.endTime) {
-                totalDuration += currDuration;
-            } else {
-                totalDuration += moment.unix(entry.endTime).diff(moment.unix(entry.startTime));
-            }
+            let endTime = entry.endTime ? moment.unix(entry.endTime) : moment();
+            totalDuration += endTime.diff(moment.unix(entry.startTime));
         }
         total.setText(getCountdownDisplay(moment.duration(totalDuration)));
     }
