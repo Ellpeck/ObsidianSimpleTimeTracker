@@ -64,6 +64,12 @@ export function displayTracker(tracker: Tracker, element: HTMLElement): void {
 
     // add list
     let table = element.createEl("table", { cls: "simple-time-tracker-table" });
+    table.createEl("tr").append(
+        createEl("th", { text: "Segment" }),
+        createEl("th", { text: "Start Time" }),
+        createEl("th", { text: "End Time" }),
+        createEl("th", { text: "Total" }));
+
     for (let entry of tracker.entries) {
         let row = table.createEl("tr");
         row.createEl("td", { text: entry.name });
