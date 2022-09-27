@@ -14,23 +14,26 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
 
 		this.registerMarkdownCodeBlockProcessor("simple-time-tracker", (s, e, i) => {
 			e.empty();
-			e.addClass("simple-time-tracker");
 
 			let tracker = loadTracker(s);
+			let running = isRunning(tracker);
 
-			let name = new TextComponent(e)
-				.setPlaceholder("Name this segment");
-			new ButtonComponent(e)
-				.setButtonText("Start")
+			let btn = new ButtonComponent(e)
+				.setButtonText(running ? "End" : "Start")
 				.onClick(async () => {
-					if (isRunning(tracker)) {
+					if (running) {
 						endEntry(tracker);
 					} else {
 						startEntry(tracker, name.getValue());
 					}
-					name.setValue("");
 					await saveTracker(tracker, this.app, i.getSectionInfo(e));
 				});
+			btn.buttonEl.addClass("simple-time-tracker-btn");
+
+			let name = new TextComponent(e)
+				.setPlaceholder("Segment Name")
+				.setDisabled(running);
+			name.inputEl.addClass("simple-time-tracker-txt");
 
 			displayTracker(tracker, e);
 		});

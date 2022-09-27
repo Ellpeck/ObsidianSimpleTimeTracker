@@ -3,3 +3,34 @@
 	width: 400px;
 	height: auto;
 }
+
+.simple-time-tracker-btn,
+.simple-time-tracker-txt {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.simple-time-tracker-btn {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.simple-time-tracker-timers {
+	display: flex;
+	justify-content: center;
+	text-align: center;
+}
+
+.simple-time-tracker-timers span {
+	display: block;
+}
+
+.simple-time-tracker-timer {
+	margin: 20px;
+}
+
+.simple-time-tracker-timer-time {
+	font-size: xx-large;
+	font-weight: bolder;
+}

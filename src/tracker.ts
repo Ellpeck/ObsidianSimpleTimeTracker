@@ -52,6 +52,14 @@ export function loadTracker(json: string): Tracker {
 }
 
 export function displayTracker(tracker: Tracker, element: HTMLElement): void {
+    let timer = element.createDiv({ cls: "simple-time-tracker-timers" });
+    let current = timer.createEl("div", { cls: "simple-time-tracker-timer" });
+    current.createEl("span", { cls: "simple-time-tracker-timer-time", text: "00:00" });
+    current.createEl("span", { text: "CURRENT" });
+    let total = timer.createEl("div", { cls: "simple-time-tracker-timer" });
+    total.createEl("span", { cls: "simple-time-tracker-timer-time", text: "01:00" });
+    total.createEl("span", { text: "TOTAL" });
+
     let list = element.createEl("ul");
     for (let entry of tracker.entries)
         list.createEl("li", { text: displayEntry(entry) });
