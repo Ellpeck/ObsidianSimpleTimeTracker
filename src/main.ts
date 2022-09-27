@@ -1,7 +1,7 @@
-import { ButtonComponent, MarkdownView, Plugin, TextComponent } from "obsidian";
+import { ButtonComponent, Plugin, TextComponent } from "obsidian";
 import { defaultSettings, SimpleTimeTrackerSettings } from "./settings";
 import { SimpleTimeTrackerSettingsTab } from "./settings-tab";
-import { Tracker } from "./tracker";
+import { displayTracker, endEntry, isRunning, loadTracker, saveTracker, startEntry, Tracker } from "./tracker";
 
 export default class SimpleTimeTrackerPlugin extends Plugin {
 
@@ -16,18 +16,23 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
 			e.empty();
 			e.addClass("simple-time-tracker");
 
-			let tracker = Tracker.load(s);
+			let tracker = loadTracker(s);
 
 			let name = new TextComponent(e)
 				.setPlaceholder("Name this segment");
 			new ButtonComponent(e)
 				.setButtonText("Start")
-				.onClick(() => {
-					tracker.start(name.getValue());
-
-					// TODO how do we save to the code block??
-					tracker.save();
+				.onClick(async () => {
+					if (isRunning(tracker)) {
+						endEntry(tracker);
+					} else {
+						startEntry(tracker, name.getValue());
+					}
+					name.setValue("");
+					await saveTracker(tracker, this.app, i.getSectionInfo(e));
 				});
+
+			displayTracker(tracker, e);
 		});
 	}
 

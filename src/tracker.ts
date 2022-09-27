@@ -1,65 +1,75 @@
-import { MarkdownSectionInformation } from "obsidian";
+import { App, MarkdownSectionInformation } from "obsidian";
 
 export class Tracker {
-
-    entries: Entry[] = [];
-
-    display(element: HTMLElement): void {
-        let list = element.createEl("ul");
-        for (let entry of this.entries)
-            list.createEl("li", { text: entry.toString() });
-    }
-
-
-    start(name: string): void {
-        // date constructor returns the current date
-        let entry = new Entry(name, new Date());
-        this.entries.push(entry);
-    }
-
-    end(): void {
-
-    }
-
-    save(): void {
-        // TODO save
-        JSON.stringify(this);
-    }
-
-    static load(json: string): Tracker {
-        if (json) {
-            try {
-                return JSON.parse(json);
-            } catch (e) {
-                console.log(`Failed to parse Tracker from ${json}`);
-            }
-        }
-        return new Tracker();
-    }
+    entries: Entry[];
 }
 
-export class Entry {
+export interface Entry {
+    name: string;
+    startTime: number;
+    endTime: number;
+}
 
-    private name: string;
-    private startTime: Date;
-    private endTime: Date;
+export function startEntry(tracker: Tracker, name: string): void {
+    // date constructor returns the current date
+    let entry: Entry = { name: name, startTime: Date.now(), endTime: null };
+    tracker.entries.push(entry);
+};
 
-    constructor(name: string, startTime: Date) {
-        this.name = name;
-        this.startTime = startTime;
-    }
+export function endEntry(tracker: Tracker): void {
+    let last = tracker.entries.last();
+    last.endTime = Date.now();
+}
 
-    toString(): string {
-        let ret = "";
-        if (this.name)
-            ret += `${this.name}: `;
+export function isRunning(tracker: Tracker): boolean {
+    let last = tracker.entries.last();
+    return last != null && !last.endTime;
+}
 
-        // if the days or months are different, we want to add the full date
-        if (this.startTime.getDay() != this.endTime.getDay() || this.startTime.getMonth() != this.endTime.getMonth()) {
-            ret += `${this.startTime.toLocaleString()} - ${this.endTime.toLocaleString()}`;
-        } else {
-            ret += `${this.startTime.toLocaleTimeString()} - ${this.endTime.toLocaleTimeString()}`;
+export async function saveTracker(tracker: Tracker, app: App, section: MarkdownSectionInformation): Promise<void> {
+    let file = app.workspace.getActiveFile();
+    let content = await app.vault.cachedRead(file);
+
+    // figure out what part of the content we have to edit
+    let lines = content.split("\n");
+    let prev = lines.filter((_, i) => i <= section.lineStart).join("\n");
+    let next = lines.filter((_, i) => i >= section.lineEnd).join("\n");
+    // edit only the code block content, leave the rest untouched
+    content = `${prev}\n${JSON.stringify(tracker)}\n${next}`;
+
+    await app.vault.modify(file, content);
+}
+
+export function loadTracker(json: string): Tracker {
+    if (json) {
+        try {
+            return JSON.parse(json);
+        } catch (e) {
+            console.log(`Failed to parse Tracker from ${json}`);
         }
-        return ret;
     }
+    return { entries: [] };
+}
+
+export function displayTracker(tracker: Tracker, element: HTMLElement): void {
+    let list = element.createEl("ul");
+    for (let entry of tracker.entries)
+        list.createEl("li", { text: displayEntry(entry) });
+};
+
+export function displayEntry(entry: Entry): string {
+    // TODO add an option to display this as an interval rather than a from - to string
+    let ret = "";
+    if (entry.name)
+        ret += `${entry.name}: `;
+
+    let start = new Date(entry.startTime);
+    ret += `${start.toLocaleString()} - `;
+
+    if (entry.endTime) {
+        let end = new Date(entry.endTime);
+        ret += `${end.toLocaleString()}`;
+    }
+
+    return ret;
 }
