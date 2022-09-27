@@ -1,4 +1,4 @@
-import { App, MarkdownSectionInformation } from "obsidian";
+import { moment, App, MarkdownSectionInformation } from "obsidian";
 
 export class Tracker {
     entries: Entry[];
@@ -11,14 +11,15 @@ export interface Entry {
 }
 
 export function startEntry(tracker: Tracker, name: string): void {
-    // date constructor returns the current date
-    let entry: Entry = { name: name, startTime: Date.now(), endTime: null };
+    if (!name)
+        name = `Segment ${tracker.entries.length + 1}`;
+    let entry: Entry = { name: name, startTime: moment().unix(), endTime: null };
     tracker.entries.push(entry);
 };
 
 export function endEntry(tracker: Tracker): void {
     let last = tracker.entries.last();
-    last.endTime = Date.now();
+    last.endTime = moment().unix();
 }
 
 export function isRunning(tracker: Tracker): boolean {
@@ -52,32 +53,64 @@ export function loadTracker(json: string): Tracker {
 }
 
 export function displayTracker(tracker: Tracker, element: HTMLElement): void {
+    // add timers
     let timer = element.createDiv({ cls: "simple-time-tracker-timers" });
-    let current = timer.createEl("div", { cls: "simple-time-tracker-timer" });
-    current.createEl("span", { cls: "simple-time-tracker-timer-time", text: "00:00" });
-    current.createEl("span", { text: "CURRENT" });
-    let total = timer.createEl("div", { cls: "simple-time-tracker-timer" });
-    total.createEl("span", { cls: "simple-time-tracker-timer-time", text: "01:00" });
-    total.createEl("span", { text: "TOTAL" });
+    let currentDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
+    let current = currentDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "00:00" });
+    currentDiv.createEl("span", { text: "CURRENT" });
+    let totalDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
+    let total = totalDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "00:00" });
+    totalDiv.createEl("span", { text: "TOTAL" });
 
-    let list = element.createEl("ul");
-    for (let entry of tracker.entries)
-        list.createEl("li", { text: displayEntry(entry) });
-};
-
-export function displayEntry(entry: Entry): string {
-    // TODO add an option to display this as an interval rather than a from - to string
-    let ret = "";
-    if (entry.name)
-        ret += `${entry.name}: `;
-
-    let start = new Date(entry.startTime);
-    ret += `${start.toLocaleString()} - `;
-
-    if (entry.endTime) {
-        let end = new Date(entry.endTime);
-        ret += `${end.toLocaleString()}`;
+    // add list
+    let table = element.createEl("table", { cls: "simple-time-tracker-table" });
+    for (let entry of tracker.entries) {
+        let row = table.createEl("tr");
+        row.createEl("td", { text: entry.name });
+        row.createEl("td", { text: moment.unix(entry.startTime).format("YY-MM-DD hh:mm:ss") });
+        if (entry.endTime) {
+            row.createEl("td", { text: moment.unix(entry.endTime).format("YY-MM-DD hh:mm:ss") });
+            let duration = moment.unix(entry.endTime).diff(moment.unix(entry.startTime));
+            row.createEl("td", { text: getCountdownDisplay(moment.duration(duration)) });
+        }
     }
 
+    setCountdownValues(tracker, current, total, currentDiv);
+    let intervalId = window.setInterval(() => {
+        // we delete the interval timer when the element is removed
+        if (!element.isConnected) {
+            window.clearInterval(intervalId);
+            return;
+        }
+        setCountdownValues(tracker, current, total, currentDiv);
+    }, 1000);
+
+};
+
+function getCountdownDisplay(duration: moment.Duration): string {
+    let ret = "";
+    if (duration.hours() > 0)
+        ret += duration.hours().toString().padStart(2, "0") + ":";
+    ret += duration.minutes().toString().padStart(2, "0") + ":" + duration.seconds().toString().padStart(2, "0");
     return ret;
+}
+
+function setCountdownValues(tracker: Tracker, current: HTMLElement, total: HTMLElement, currentDiv: HTMLDivElement) {
+    let currEntry = tracker.entries.last();
+    if (currEntry) {
+        let currDuration = moment().diff(moment.unix(currEntry.startTime));
+        if (!currEntry.endTime)
+            current.setText(getCountdownDisplay(moment.duration(currDuration)));
+
+        let totalDuration = 0;
+        for (let entry of tracker.entries) {
+            if (entry == currEntry && !currEntry.endTime) {
+                totalDuration += currDuration;
+            } else {
+                totalDuration += moment.unix(entry.endTime).diff(moment.unix(entry.startTime));
+            }
+        }
+        total.setText(getCountdownDisplay(moment.duration(totalDuration)));
+    }
+    currentDiv.toggleClass("simple-time-tracker-grayed", !currEntry || !!currEntry.endTime);
 }

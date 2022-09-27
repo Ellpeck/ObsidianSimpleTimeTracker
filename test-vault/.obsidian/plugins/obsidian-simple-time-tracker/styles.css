@@ -11,6 +11,10 @@
 	margin-right: auto;
 }
 
+.simple-time-tracker-txt {
+	text-align: center;
+}
+
 .simple-time-tracker-btn {
 	margin-top: 10px;
 	margin-bottom: 10px;
@@ -33,4 +37,17 @@
 .simple-time-tracker-timer-time {
 	font-size: xx-large;
 	font-weight: bolder;
+}
+
+.simple-time-tracker-grayed {
+	opacity: 25%;
+}
+
+.simple-time-tracker-table {
+	width: 100%;
+	margin-top: 20px;
+}
+
+.simple-time-tracker-table td {
+	border: none;
 }

@@ -1,7 +1,7 @@
 This is a time tracker:
 
 ```simple-time-tracker
-{"entries":[{"name":"Test segment my dudes!","startTime":1664298280695,"endTime":1664298283168},{"name":"","startTime":1664298304811,"endTime":1664298305748},{"name":"","startTime":1664298308288,"endTime":1664298322668},{"name":"","startTime":1664298323435,"endTime":1664298324617},{"name":"","startTime":1664298325410,"endTime":1664298326481},{"name":"","startTime":1664298328460,"endTime":1664298788945},{"name":"","startTime":1664298940959,"endTime":1664298943024},{"name":"","startTime":1664299161618,"endTime":1664299162696},{"name":"","startTime":1664299510766,"endTime":1664299511737}]}
+{"entries":[{"name":"Segment 1","startTime":1664306406,"endTime":1664306408},{"name":"Segment 2","startTime":1664306409,"endTime":1664306410},{"name":"Segment 3","startTime":1664306411,"endTime":1664306412},{"name":"Segment 4","startTime":1664306413,"endTime":1664306422},{"name":"Segment 5","startTime":1664306455,"endTime":1664306458},{"name":"Segment 6","startTime":1664306543,"endTime":1664306545},{"name":"Segment 7","startTime":1664306581,"endTime":1664306599}]}
 ```
 
 
