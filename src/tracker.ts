@@ -57,17 +57,17 @@ export function displayTracker(tracker: Tracker, element: HTMLElement): void {
     let timer = element.createDiv({ cls: "simple-time-tracker-timers" });
     let currentDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
     let current = currentDiv.createEl("span", { cls: "simple-time-tracker-timer-time" });
-    currentDiv.createEl("span", { text: "CURRENT" });
+    currentDiv.createEl("span", { text: "Current" });
     let totalDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
     let total = totalDiv.createEl("span", { cls: "simple-time-tracker-timer-time" });
-    totalDiv.createEl("span", { text: "TOTAL" });
+    totalDiv.createEl("span", { text: "Total" });
 
     // add list
     let table = element.createEl("table", { cls: "simple-time-tracker-table" });
     table.createEl("tr").append(
         createEl("th", { text: "Segment" }),
-        createEl("th", { text: "Start Time" }),
-        createEl("th", { text: "End Time" }),
+        createEl("th", { text: "Start time" }),
+        createEl("th", { text: "End time" }),
         createEl("th", { text: "Total" }));
 
     for (let entry of tracker.entries) {

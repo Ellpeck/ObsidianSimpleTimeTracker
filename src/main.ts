@@ -31,7 +31,7 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
 			btn.buttonEl.addClass("simple-time-tracker-btn");
 
 			let name = new TextComponent(e)
-				.setPlaceholder("Segment Name")
+				.setPlaceholder("Segment name")
 				.setDisabled(running);
 			name.inputEl.addClass("simple-time-tracker-txt");
 
