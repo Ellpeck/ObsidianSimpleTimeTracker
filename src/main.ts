@@ -1,4 +1,4 @@
-import { Plugin, Platform, WorkspaceLeaf } from "obsidian";
+import { Plugin } from "obsidian";
 import { defaultSettings, SimpleTimeTrackerSettings } from "./settings";
 import { SimpleTimeTrackerSettingsTab } from "./settings-tab";
 
