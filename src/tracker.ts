@@ -56,10 +56,10 @@ export function displayTracker(tracker: Tracker, element: HTMLElement): void {
     // add timers
     let timer = element.createDiv({ cls: "simple-time-tracker-timers" });
     let currentDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
-    let current = currentDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "00:00" });
+    let current = currentDiv.createEl("span", { cls: "simple-time-tracker-timer-time" });
     currentDiv.createEl("span", { text: "CURRENT" });
     let totalDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
-    let total = totalDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "00:00" });
+    let total = totalDiv.createEl("span", { cls: "simple-time-tracker-timer-time" });
     totalDiv.createEl("span", { text: "TOTAL" });
 
     // add list
@@ -96,8 +96,10 @@ export function displayTracker(tracker: Tracker, element: HTMLElement): void {
 function getCountdownDisplay(duration: moment.Duration): string {
     let ret = "";
     if (duration.hours() > 0)
-        ret += duration.hours().toString().padStart(2, "0") + ":";
-    ret += duration.minutes().toString().padStart(2, "0") + ":" + duration.seconds().toString().padStart(2, "0");
+        ret += duration.hours() + "h ";
+    if (duration.minutes() > 0)
+        ret += duration.minutes() + "m ";
+    ret += duration.seconds() + "s";
     return ret;
 }
 
@@ -118,5 +120,5 @@ function setCountdownValues(tracker: Tracker, current: HTMLElement, total: HTMLE
         }
         total.setText(getCountdownDisplay(moment.duration(totalDuration)));
     }
-    currentDiv.toggleClass("simple-time-tracker-grayed", !currEntry || !!currEntry.endTime);
+    currentDiv.hidden = !currEntry || !!currEntry.endTime;
 }
