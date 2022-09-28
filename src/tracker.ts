@@ -106,7 +106,7 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getSectio
             .setButtonText("Copy as table")
             .onClick(() => navigator.clipboard.writeText(createMarkdownTable(tracker, settings)));
         new ButtonComponent(buttons)
-            .setButtonText("Copy as csv")
+            .setButtonText("Copy as CSV")
             .onClick(() => navigator.clipboard.writeText(createCsv(tracker, settings)));
     }
 
@@ -185,7 +185,7 @@ function createMarkdownTable(tracker: Tracker, settings: SimpleTimeTrackerSettin
 function createCsv(tracker: Tracker, settings: SimpleTimeTrackerSettings): string {
     let ret = "";
     for (let entry of tracker.entries)
-        ret += createTableRow(entry, settings).join(settings.csvSeparator) + "\n";
+        ret += createTableRow(entry, settings).join(settings.csvDelimiter) + "\n";
     return ret;
 }
 
