@@ -20,12 +20,23 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
             .setDesc(createFragment(f => {
                 f.createSpan({ text: "The way that timestamps in time tracker tables should be displayed. Uses " });
                 f.createEl("a", { text: "moment.js", href: "https://momentjs.com/docs/#/parsing/string-format/" });
-                f.createSpan({ text: " syntax. Clear to reset to default." });
+                f.createSpan({ text: " syntax." });
             }))
             .addText(t => {
                 t.setValue(String(this.plugin.settings.timestampFormat));
                 t.onChange(async v => {
                     this.plugin.settings.timestampFormat = v.length ? v : defaultSettings.timestampFormat;
+                    await this.plugin.saveSettings();
+                });
+            });
+
+        new Setting(this.containerEl)
+            .setName("CSV Delimiter")
+            .setDesc("The delimiter character that should be used when copying a tracker table as CSV. For example, some languages use a semicolon instead of a comma.")
+            .addText(t => {
+                t.setValue(String(this.plugin.settings.csvDelimiter));
+                t.onChange(async v => {
+                    this.plugin.settings.csvDelimiter = v.length ? v : defaultSettings.csvDelimiter;
                     await this.plugin.saveSettings();
                 });
             });

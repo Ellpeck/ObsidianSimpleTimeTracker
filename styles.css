@@ -20,7 +20,12 @@
 	margin-bottom: 10px;
 }
 
-.simple-time-tracker-timers {
+.simple-time-tracker-bottom button {
+	margin: 10px 5px 10px 5px;
+}
+
+.simple-time-tracker-timers,
+.simple-time-tracker-bottom {
 	display: flex;
 	justify-content: center;
 	text-align: center;

@@ -81,26 +81,35 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getSectio
     let total = totalDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "0s" });
     totalDiv.createEl("span", { text: "Total" });
 
-    // add table
     if (tracker.entries.length > 0) {
+        // add table
         let table = element.createEl("table", { cls: "simple-time-tracker-table" });
         table.createEl("tr").append(
             createEl("th", { text: "Segment" }),
             createEl("th", { text: "Start time" }),
             createEl("th", { text: "End time" }),
-            createEl("th", { text: "Total" }));
+            createEl("th", { text: "Duration" }));
 
         for (let entry of tracker.entries) {
             let row = table.createEl("tr");
             row.createEl("td", { text: entry.name });
-            row.createEl("td", { text: moment.unix(entry.startTime).format(settings.timestampFormat) });
+            row.createEl("td", { text: formatTimestamp(entry.startTime, settings) });
             if (entry.endTime) {
-                row.createEl("td", { text: moment.unix(entry.endTime).format(settings.timestampFormat) });
-                let duration = moment.unix(entry.endTime).diff(moment.unix(entry.startTime));
-                row.createEl("td", { text: getCountdownDisplay(moment.duration(duration)) });
+                row.createEl("td", { text: formatTimestamp(entry.endTime, settings) });
+                row.createEl("td", { text: formatDurationBetween(entry.startTime, entry.endTime) });
             }
         }
+
+        // add copy buttons
+        let buttons = element.createEl("div", { cls: "simple-time-tracker-bottom" });
+        new ButtonComponent(buttons)
+            .setButtonText("Copy as table")
+            .onClick(() => navigator.clipboard.writeText(createMarkdownTable(tracker, settings)));
+        new ButtonComponent(buttons)
+            .setButtonText("Copy as csv")
+            .onClick(() => navigator.clipboard.writeText(createCsv(tracker, settings)));
     }
+
 
     setCountdownValues(tracker, current, total, currentDiv);
     let intervalId = window.setInterval(() => {
@@ -113,7 +122,35 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getSectio
     }, 1000);
 }
 
-function getCountdownDisplay(duration: moment.Duration): string {
+function setCountdownValues(tracker: Tracker, current: HTMLElement, total: HTMLElement, currentDiv: HTMLDivElement) {
+    let currEntry = tracker.entries.last();
+    if (currEntry) {
+        if (!currEntry.endTime)
+            current.setText(formatDurationBetween(currEntry.startTime, moment().unix()));
+        total.setText(formatDuration(getTotalDuration(tracker)));
+    }
+    currentDiv.hidden = !currEntry || !!currEntry.endTime;
+}
+
+function getTotalDuration(tracker: Tracker): number {
+    let totalDuration = 0;
+    for (let entry of tracker.entries) {
+        let endTime = entry.endTime ? moment.unix(entry.endTime) : moment();
+        totalDuration += endTime.diff(moment.unix(entry.startTime));
+    }
+    return totalDuration;
+}
+
+function formatTimestamp(timestamp: number, settings: SimpleTimeTrackerSettings): string {
+    return moment.unix(timestamp).format(settings.timestampFormat);
+}
+
+function formatDurationBetween(startTime: number, endTime: number): string {
+    return formatDuration(moment.unix(endTime).diff(moment.unix(startTime)));
+}
+
+function formatDuration(totalTime: number): string {
+    let duration = moment.duration(totalTime);
     let ret = "";
     if (duration.hours() > 0)
         ret += duration.hours() + "h ";
@@ -123,20 +160,39 @@ function getCountdownDisplay(duration: moment.Duration): string {
     return ret;
 }
 
-function setCountdownValues(tracker: Tracker, current: HTMLElement, total: HTMLElement, currentDiv: HTMLDivElement) {
-    let currEntry = tracker.entries.last();
-    if (currEntry) {
-        if (!currEntry.endTime) {
-            let currDuration = moment().diff(moment.unix(currEntry.startTime));
-            current.setText(getCountdownDisplay(moment.duration(currDuration)));
-        }
+function createMarkdownTable(tracker: Tracker, settings: SimpleTimeTrackerSettings): string {
+    let table = [["Segment", "Start time", "End time", "Duration"]];
+    for (let entry of tracker.entries)
+        table.push(createTableRow(entry, settings));
+    table.push(["**Total**", "", "", `**${formatDuration(getTotalDuration(tracker))}**`]);
 
-        let totalDuration = 0;
-        for (let entry of tracker.entries) {
-            let endTime = entry.endTime ? moment.unix(entry.endTime) : moment();
-            totalDuration += endTime.diff(moment.unix(entry.startTime));
-        }
-        total.setText(getCountdownDisplay(moment.duration(totalDuration)));
+    let ret = "";
+    // calculate the width every column needs to look neat when monospaced
+    let widths = Array.from(Array(4).keys()).map(i => Math.max(...table.map(a => a[i].length)));
+    for (let r = 0; r < table.length; r++) {
+        // add separators after first row
+        if (r == 1)
+            ret += Array.from(Array(4).keys()).map(i => "-".repeat(widths[i])).join(" | ") + "\n";
+
+        let row: string[] = [];
+        for (let i = 0; i < 4; i++)
+            row.push(table[r][i].padEnd(widths[i], " "));
+        ret += row.join(" | ") + "\n";
     }
-    currentDiv.hidden = !currEntry || !!currEntry.endTime;
+    return ret;
+}
+
+function createCsv(tracker: Tracker, settings: SimpleTimeTrackerSettings): string {
+    let ret = "";
+    for (let entry of tracker.entries)
+        ret += createTableRow(entry, settings).join(settings.csvSeparator) + "\n";
+    return ret;
+}
+
+function createTableRow(entry: Entry, settings: SimpleTimeTrackerSettings): string[] {
+    return [
+        entry.name,
+        formatTimestamp(entry.startTime, settings),
+        entry.endTime ? formatTimestamp(entry.endTime, settings) : "",
+        entry.endTime ? formatDurationBetween(entry.startTime, entry.endTime) : ""];
 }

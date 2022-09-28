@@ -1,3 +1,4 @@
 {
-  "timestampFormat": "YY-MM-DD hh:mm:ss"
+  "timestampFormat": "YY-MM-DD hh:mm:ss",
+  "csvSeparator": ","
 }
