@@ -15,7 +15,6 @@ The tracker's information is stored in the code block as JSON data. The names, s
 
 # 🛣️ Roadmap
 Super Simple Time Tracker is still in its early stages! There are a lot of plans for it, including:
-- A setting to allow users to decide what format timestamps should be displayed in
 - A setting to link segments to corresponding daily notes automatically
 - A neat interface to edit previous segments' names and time stamps
 - The ability to copy the table in various formats, including as text, markdown, and csv

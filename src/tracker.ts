@@ -1,4 +1,5 @@
 import { moment, App, MarkdownSectionInformation, ButtonComponent, TextComponent } from "obsidian";
+import { SimpleTimeTrackerSettings } from "./settings";
 
 export class Tracker {
     entries: Entry[];
@@ -52,7 +53,7 @@ export function loadTracker(json: string): Tracker {
     return { entries: [] };
 }
 
-export function displayTracker(tracker: Tracker, element: HTMLElement, getSectionInfo: () => MarkdownSectionInformation): void {
+export function displayTracker(tracker: Tracker, element: HTMLElement, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings): void {
     // add start/stop controls
     let running = isRunning(tracker);
     let btn = new ButtonComponent(element)
@@ -92,9 +93,9 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getSectio
         for (let entry of tracker.entries) {
             let row = table.createEl("tr");
             row.createEl("td", { text: entry.name });
-            row.createEl("td", { text: moment.unix(entry.startTime).format("YY-MM-DD hh:mm:ss") });
+            row.createEl("td", { text: moment.unix(entry.startTime).format(settings.timestampFormat) });
             if (entry.endTime) {
-                row.createEl("td", { text: moment.unix(entry.endTime).format("YY-MM-DD hh:mm:ss") });
+                row.createEl("td", { text: moment.unix(entry.endTime).format(settings.timestampFormat) });
                 let duration = moment.unix(entry.endTime).diff(moment.unix(entry.startTime));
                 row.createEl("td", { text: getCountdownDisplay(moment.duration(duration)) });
             }

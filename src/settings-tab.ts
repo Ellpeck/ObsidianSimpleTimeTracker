@@ -1,5 +1,6 @@
-import { App, PluginSettingTab } from "obsidian";
+import { App, PluginSettingTab, Setting } from "obsidian";
 import SimpleTimeTrackerPlugin from "./main";
+import { defaultSettings } from "./settings";
 
 export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
 
@@ -14,7 +15,20 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
         this.containerEl.empty();
         this.containerEl.createEl("h2", { text: "Super Simple Time Tracker Settings" });
 
-        this.containerEl.createEl("p", { text: "Settings coming soon!" });
+        new Setting(this.containerEl)
+            .setName("Timestamp Display Format")
+            .setDesc(createFragment(f => {
+                f.createSpan({ text: "The way that timestamps in time tracker tables should be displayed. Uses " });
+                f.createEl("a", { text: "moment.js", href: "https://momentjs.com/docs/#/parsing/string-format/" });
+                f.createSpan({ text: " syntax. Clear to reset to default." });
+            }))
+            .addText(t => {
+                t.setValue(String(this.plugin.settings.timestampFormat));
+                t.onChange(async v => {
+                    this.plugin.settings.timestampFormat = v.length ? v : defaultSettings.timestampFormat;
+                    await this.plugin.saveSettings();
+                });
+            });
 
         this.containerEl.createEl("hr");
         this.containerEl.createEl("p", { text: "If you like this plugin and want to support its development, you can do so through my website by clicking this fancy image!" });
