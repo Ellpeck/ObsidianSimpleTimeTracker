@@ -1,7 +1,7 @@
 import { moment, App, MarkdownSectionInformation, ButtonComponent, TextComponent } from "obsidian";
 import { SimpleTimeTrackerSettings } from "./settings";
 
-export class Tracker {
+export interface Tracker {
     entries: Entry[];
 }
 
