@@ -1,5 +1,5 @@
 {
-	"name": "obsidian-simple-time-tracker",
+	"name": "simple-time-tracker",
 	"version": "0.1.1",
 	"description": "Multi-purpose time trackers for your notes!",
 	"main": "main.js",

@@ -46,7 +46,7 @@ esbuild.build({
 		copy({
 			assets: [{
 				from: ["./manifest.json", "./main.js", "./styles.css"],
-				to: ["./test-vault/.obsidian/plugins/obsidian-simple-time-tracker/."]
+				to: ["./test-vault/.obsidian/plugins/simple-time-tracker/."]
 			}]
 		}),
 	],
