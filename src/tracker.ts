@@ -30,7 +30,9 @@ export function isRunning(tracker: Tracker): boolean {
 
 export async function saveTracker(tracker: Tracker, app: App, section: MarkdownSectionInformation): Promise<void> {
     let file = app.workspace.getActiveFile();
-    let content = await app.vault.cachedRead(file);
+    if (!file)
+        return;
+    let content = await app.vault.read(file);
 
     // figure out what part of the content we have to edit
     let lines = content.split("\n");
