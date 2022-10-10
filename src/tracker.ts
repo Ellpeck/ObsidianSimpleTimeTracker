@@ -90,16 +90,50 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getSectio
             createEl("th", { text: "Segment" }),
             createEl("th", { text: "Start time" }),
             createEl("th", { text: "End time" }),
-            createEl("th", { text: "Duration" }));
+            createEl("th", { text: "Duration" }),
+            createEl("th"));
 
         for (let entry of tracker.entries) {
             let row = table.createEl("tr");
-            row.createEl("td", { text: entry.name });
+
+            let name = row.createEl("td");
+            let namePar = name.createEl("span", { text: entry.name });
+            let nameBox = new TextComponent(name).setValue(entry.name);
+            nameBox.inputEl.hidden = true;
+
             row.createEl("td", { text: formatTimestamp(entry.startTime, settings) });
             if (entry.endTime) {
                 row.createEl("td", { text: formatTimestamp(entry.endTime, settings) });
                 row.createEl("td", { text: formatDurationBetween(entry.startTime, entry.endTime) });
             }
+
+            let entryButtons = row.createEl("td");
+            let editButton = new ButtonComponent(entryButtons)
+                .setClass("clickable-icon")
+                .setTooltip("Edit")
+                .setIcon("lucide-pencil")
+                .onClick(() => {
+                    if (namePar.hidden) {
+                        namePar.hidden = false;
+                        nameBox.inputEl.hidden = true;
+                        if (nameBox.getValue())
+                            namePar.setText(nameBox.getValue());
+                        editButton.setIcon("lucide-pencil");
+                    } else {
+                        namePar.hidden = true;
+                        nameBox.inputEl.hidden = false;
+                        nameBox.setValue(namePar.getText());
+                        editButton.setIcon("lucide-check");
+                    }
+                });
+            new ButtonComponent(entryButtons)
+                .setClass("clickable-icon")
+                .setTooltip("Remove")
+                .setIcon("lucide-trash")
+                .onClick(async () => {
+                    tracker.entries.remove(entry);
+                    await saveTracker(tracker, this.app, getSectionInfo());
+                });
         }
 
         // add copy buttons

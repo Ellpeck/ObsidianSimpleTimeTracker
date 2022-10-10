@@ -53,3 +53,7 @@
 .simple-time-tracker-table th {
 	border: none;
 }
+
+.simple-time-tracker-table .clickable-icon {
+	display: inline;
+}
