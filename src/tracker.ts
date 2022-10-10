@@ -59,7 +59,9 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getSectio
     // add start/stop controls
     let running = isRunning(tracker);
     let btn = new ButtonComponent(element)
-        .setButtonText(running ? "End" : "Start")
+        .setClass("clickable-icon")
+        .setIcon(`lucide-${running ? "stop" : "play"}-circle`)
+        .setTooltip(running ? "End" : "Start")
         .onClick(async () => {
             if (running) {
                 endEntry(tracker);
@@ -102,10 +104,8 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getSectio
             nameBox.inputEl.hidden = true;
 
             row.createEl("td", { text: formatTimestamp(entry.startTime, settings) });
-            if (entry.endTime) {
-                row.createEl("td", { text: formatTimestamp(entry.endTime, settings) });
-                row.createEl("td", { text: formatDurationBetween(entry.startTime, entry.endTime) });
-            }
+            row.createEl("td", { text: entry.endTime ? formatTimestamp(entry.endTime, settings) : "" });
+            row.createEl("td", { text: entry.endTime ? formatDurationBetween(entry.startTime, entry.endTime) : "" });
 
             let entryButtons = row.createEl("td");
             let editButton = new ButtonComponent(entryButtons)

@@ -20,6 +20,11 @@
 	margin-bottom: 10px;
 }
 
+.simple-time-tracker-btn svg {
+	width: 32px;
+	height: 32px;
+}
+
 .simple-time-tracker-bottom button {
 	margin: 10px 5px 10px 5px;
 }
