@@ -112,17 +112,20 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getSectio
                 .setClass("clickable-icon")
                 .setTooltip("Edit")
                 .setIcon("lucide-pencil")
-                .onClick(() => {
+                .onClick(async () => {
                     if (namePar.hidden) {
                         namePar.hidden = false;
                         nameBox.inputEl.hidden = true;
-                        if (nameBox.getValue())
-                            namePar.setText(nameBox.getValue());
                         editButton.setIcon("lucide-pencil");
+                        if (nameBox.getValue()) {
+                            entry.name = nameBox.getValue();
+                            namePar.setText(entry.name);
+                            await saveTracker(tracker, this.app, getSectionInfo());
+                        }
                     } else {
                         namePar.hidden = true;
                         nameBox.inputEl.hidden = false;
-                        nameBox.setValue(namePar.getText());
+                        nameBox.setValue(entry.name);
                         editButton.setIcon("lucide-check");
                     }
                 });
