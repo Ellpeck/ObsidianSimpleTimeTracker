@@ -2,7 +2,7 @@
 These are the notes for my cool project. There's so much left to do! I wish I had a way to track the amount of time I spend on each part of the project.
 
 ```simple-time-tracker
-{"entries":[{"name":"Think about project","startTime":1664305777,"endTime":1664308788},{"name":"Create project note","startTime":1664308810,"endTime":1664308815},{"name":"Work on project","startTime":1664308830,"endTime":1664309301},{"name":"Segment 4","startTime":1664364444,"endTime":1664364449},{"name":"Segment 5","startTime":1664364495,"endTime":1664364498},{"name":"Segment 6","startTime":1664458520,"endTime":1664458523},{"name":"Segment 7","startTime":1664460326,"endTime":1664460329}]}
+{"entries":[{"name":"Segment 1","startTime":1666189948,"endTime":1666189951,"subEntries":null},{"name":"Segment 2","startTime":1666189953,"endTime":1666189961,"subEntries":null},{"name":"Segment 3","startTime":null,"endTime":null,"subEntries":[{"name":"Part 1","startTime":1666189962,"endTime":1666189995,"subEntries":null},{"name":"Part 2","startTime":1666190004,"endTime":1666190025,"subEntries":null},{"name":"Part 3","startTime":1666190094,"endTime":1666190101,"subEntries":null}]},{"name":"Segment 4","startTime":1666190088,"endTime":1666190091,"subEntries":null}]}
 ```
 
 ```
@@ -13,6 +13,3 @@ Segment 4,22-09-28 01:27:24,22-09-28 01:27:29,5s
 Segment 5,22-09-28 01:28:15,22-09-28 01:28:18,3s
 
 ```
-
-
-

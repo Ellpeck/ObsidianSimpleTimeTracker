@@ -9,23 +9,7 @@ export interface Entry {
     name: string;
     startTime: number;
     endTime: number;
-}
-
-export function startEntry(tracker: Tracker, name: string): void {
-    if (!name)
-        name = `Segment ${tracker.entries.length + 1}`;
-    let entry: Entry = { name: name, startTime: moment().unix(), endTime: null };
-    tracker.entries.push(entry);
-};
-
-export function endEntry(tracker: Tracker): void {
-    let last = tracker.entries.last();
-    last.endTime = moment().unix();
-}
-
-export function isRunning(tracker: Tracker): boolean {
-    let last = tracker.entries.last();
-    return last != null && !last.endTime;
+    subEntries: Entry[];
 }
 
 export async function saveTracker(tracker: Tracker, app: App, section: MarkdownSectionInformation): Promise<void> {
@@ -64,17 +48,17 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getSectio
         .setTooltip(running ? "End" : "Start")
         .onClick(async () => {
             if (running) {
-                endEntry(tracker);
+                endRunningEntry(tracker);
             } else {
-                startEntry(tracker, name.getValue());
+                startNewEntry(tracker, newSegmentNameBox.getValue());
             }
             await saveTracker(tracker, this.app, getSectionInfo());
         });
     btn.buttonEl.addClass("simple-time-tracker-btn");
-    let name = new TextComponent(element)
+    let newSegmentNameBox = new TextComponent(element)
         .setPlaceholder("Segment name")
         .setDisabled(running);
-    name.inputEl.addClass("simple-time-tracker-txt");
+    newSegmentNameBox.inputEl.addClass("simple-time-tracker-txt");
 
     // add timers
     let timer = element.createDiv({ cls: "simple-time-tracker-timers" });
@@ -95,49 +79,8 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getSectio
             createEl("th", { text: "Duration" }),
             createEl("th"));
 
-        for (let entry of tracker.entries) {
-            let row = table.createEl("tr");
-
-            let name = row.createEl("td");
-            let namePar = name.createEl("span", { text: entry.name });
-            let nameBox = new TextComponent(name).setValue(entry.name);
-            nameBox.inputEl.hidden = true;
-
-            row.createEl("td", { text: formatTimestamp(entry.startTime, settings) });
-            row.createEl("td", { text: entry.endTime ? formatTimestamp(entry.endTime, settings) : "" });
-            row.createEl("td", { text: entry.endTime ? formatDurationBetween(entry.startTime, entry.endTime) : "" });
-
-            let entryButtons = row.createEl("td");
-            let editButton = new ButtonComponent(entryButtons)
-                .setClass("clickable-icon")
-                .setTooltip("Edit")
-                .setIcon("lucide-pencil")
-                .onClick(async () => {
-                    if (namePar.hidden) {
-                        namePar.hidden = false;
-                        nameBox.inputEl.hidden = true;
-                        editButton.setIcon("lucide-pencil");
-                        if (nameBox.getValue()) {
-                            entry.name = nameBox.getValue();
-                            namePar.setText(entry.name);
-                            await saveTracker(tracker, this.app, getSectionInfo());
-                        }
-                    } else {
-                        namePar.hidden = true;
-                        nameBox.inputEl.hidden = false;
-                        nameBox.setValue(entry.name);
-                        editButton.setIcon("lucide-check");
-                    }
-                });
-            new ButtonComponent(entryButtons)
-                .setClass("clickable-icon")
-                .setTooltip("Remove")
-                .setIcon("lucide-trash")
-                .onClick(async () => {
-                    tracker.entries.remove(entry);
-                    await saveTracker(tracker, this.app, getSectionInfo());
-                });
-        }
+        for (let entry of tracker.entries)
+            addEditableTableRow(tracker, entry, table, newSegmentNameBox, running, getSectionInfo, settings, 0);
 
         // add copy buttons
         let buttons = element.createEl("div", { cls: "simple-time-tracker-bottom" });
@@ -161,31 +104,101 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getSectio
     }, 1000);
 }
 
-function setCountdownValues(tracker: Tracker, current: HTMLElement, total: HTMLElement, currentDiv: HTMLDivElement) {
-    let currEntry = tracker.entries.last();
-    if (currEntry) {
-        if (!currEntry.endTime)
-            current.setText(formatDurationBetween(currEntry.startTime, moment().unix()));
-        total.setText(formatDuration(getTotalDuration(tracker)));
+function startSubEntry(entry: Entry, name: string) {
+    // if this entry is not split yet, we add its time as a sub-entry instead
+    if (!entry.subEntries) {
+        entry.subEntries = [{ ...entry, name: `Part 1` }];
+        entry.startTime = null;
+        entry.endTime = null;
     }
-    currentDiv.hidden = !currEntry || !!currEntry.endTime;
+
+    if (!name)
+        name = `Part ${entry.subEntries.length + 1}`;
+    entry.subEntries.push({ name: name, startTime: moment().unix(), endTime: null, subEntries: null });
 }
 
-function getTotalDuration(tracker: Tracker): number {
-    let totalDuration = 0;
-    for (let entry of tracker.entries) {
-        let endTime = entry.endTime ? moment.unix(entry.endTime) : moment();
-        totalDuration += endTime.diff(moment.unix(entry.startTime));
+function startNewEntry(tracker: Tracker, name: string): void {
+    if (!name)
+        name = `Segment ${tracker.entries.length + 1}`;
+    let entry: Entry = { name: name, startTime: moment().unix(), endTime: null, subEntries: null };
+    tracker.entries.push(entry);
+};
+
+function endRunningEntry(tracker: Tracker): void {
+    let entry = getRunningEntry(tracker.entries);
+    entry.endTime = moment().unix();
+}
+
+function removeEntry(entries: Entry[], toRemove: Entry): boolean {
+    if (entries.contains(toRemove)) {
+        entries.remove(toRemove);
+        return true;
+    } else {
+        for (let entry of entries) {
+            if (entry.subEntries && removeEntry(entry.subEntries, toRemove)) {
+                // if we only have one sub entry remaining, we can merge back into our main entry
+                if (entry.subEntries.length == 1) {
+                    let single = entry.subEntries[0];
+                    entry.startTime = single.startTime;
+                    entry.endTime = single.endTime;
+                    entry.subEntries = null;
+                }
+                return true;
+            }
+        }
     }
-    return totalDuration;
+    return false;
+}
+
+function isRunning(tracker: Tracker): boolean {
+    return !!getRunningEntry(tracker.entries);
+}
+
+function getRunningEntry(entries: Entry[]): Entry {
+    for (let entry of entries) {
+        // if this entry has sub entries, check if one of them is running
+        if (entry.subEntries) {
+            let running = getRunningEntry(entry.subEntries);
+            if (running)
+                return running;
+        } else {
+            // if this entry has no sub entries and no end time, it's running
+            if (!entry.endTime)
+                return entry;
+        }
+    }
+    return null;
+}
+
+function getDuration(entry: Entry) {
+    if (entry.subEntries) {
+        return getTotalDuration(entry.subEntries);
+    } else {
+        let endTime = entry.endTime ? moment.unix(entry.endTime) : moment();
+        return endTime.diff(moment.unix(entry.startTime));
+    }
+}
+
+function getTotalDuration(entries: Entry[]): number {
+    let ret = 0;
+    for (let entry of entries)
+        ret += getDuration(entry);
+    return ret;
+}
+
+function setCountdownValues(tracker: Tracker, current: HTMLElement, total: HTMLElement, currentDiv: HTMLDivElement) {
+    let running = getRunningEntry(tracker.entries);
+    if (running && !running.endTime) {
+        current.setText(formatDuration(getDuration(running)));
+        currentDiv.hidden = false;
+    } else {
+        currentDiv.hidden = true;
+    }
+    total.setText(formatDuration(getTotalDuration(tracker.entries)));
 }
 
 function formatTimestamp(timestamp: number, settings: SimpleTimeTrackerSettings): string {
     return moment.unix(timestamp).format(settings.timestampFormat);
-}
-
-function formatDurationBetween(startTime: number, endTime: number): string {
-    return formatDuration(moment.unix(endTime).diff(moment.unix(startTime)));
 }
 
 function formatDuration(totalTime: number): string {
@@ -202,8 +215,8 @@ function formatDuration(totalTime: number): string {
 function createMarkdownTable(tracker: Tracker, settings: SimpleTimeTrackerSettings): string {
     let table = [["Segment", "Start time", "End time", "Duration"]];
     for (let entry of tracker.entries)
-        table.push(createTableRow(entry, settings));
-    table.push(["**Total**", "", "", `**${formatDuration(getTotalDuration(tracker))}**`]);
+        table.push(...createTableSection(entry, settings));
+    table.push(["**Total**", "", "", `**${formatDuration(getTotalDuration(tracker.entries))}**`]);
 
     let ret = "";
     // calculate the width every column needs to look neat when monospaced
@@ -223,15 +236,82 @@ function createMarkdownTable(tracker: Tracker, settings: SimpleTimeTrackerSettin
 
 function createCsv(tracker: Tracker, settings: SimpleTimeTrackerSettings): string {
     let ret = "";
-    for (let entry of tracker.entries)
-        ret += createTableRow(entry, settings).join(settings.csvDelimiter) + "\n";
+    for (let entry of tracker.entries) {
+        for (let row of createTableSection(entry, settings))
+            ret += row.join(settings.csvDelimiter) + "\n";
+    }
     return ret;
 }
 
-function createTableRow(entry: Entry, settings: SimpleTimeTrackerSettings): string[] {
-    return [
+function createTableSection(entry: Entry, settings: SimpleTimeTrackerSettings): string[][] {
+    let ret: string[][] = [[
         entry.name,
-        formatTimestamp(entry.startTime, settings),
+        entry.startTime ? formatTimestamp(entry.startTime, settings) : "",
         entry.endTime ? formatTimestamp(entry.endTime, settings) : "",
-        entry.endTime ? formatDurationBetween(entry.startTime, entry.endTime) : ""];
+        entry.endTime || entry.subEntries ? formatDuration(getDuration(entry)) : ""]];
+    if (entry.subEntries) {
+        for (let sub of entry.subEntries)
+            ret.push(...createTableSection(sub, settings));
+    }
+    return ret;
+}
+
+function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, running: boolean, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number) {
+    let row = table.createEl("tr");
+
+    let name = row.createEl("td");
+    let namePar = name.createEl("span", { text: entry.name });
+    namePar.style.marginLeft = `${indent}em`;
+    let nameBox = new TextComponent(name).setValue(entry.name);
+    nameBox.inputEl.hidden = true;
+
+    row.createEl("td", { text: entry.startTime ? formatTimestamp(entry.startTime, settings) : "" });
+    row.createEl("td", { text: entry.endTime ? formatTimestamp(entry.endTime, settings) : "" });
+    row.createEl("td", { text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry)) : "" });
+
+    let entryButtons = row.createEl("td");
+    if (!running) {
+        new ButtonComponent(entryButtons)
+            .setClass("clickable-icon")
+            .setIcon(`lucide-play`)
+            .setTooltip("Continue")
+            .onClick(async () => {
+                startSubEntry(entry, newSegmentNameBox.getValue());
+                await saveTracker(tracker, this.app, getSectionInfo());
+            });
+    }
+    let editButton = new ButtonComponent(entryButtons)
+        .setClass("clickable-icon")
+        .setTooltip("Edit")
+        .setIcon("lucide-pencil")
+        .onClick(async () => {
+            if (namePar.hidden) {
+                namePar.hidden = false;
+                nameBox.inputEl.hidden = true;
+                editButton.setIcon("lucide-pencil");
+                if (nameBox.getValue()) {
+                    entry.name = nameBox.getValue();
+                    namePar.setText(entry.name);
+                    await saveTracker(tracker, this.app, getSectionInfo());
+                }
+            } else {
+                namePar.hidden = true;
+                nameBox.inputEl.hidden = false;
+                nameBox.setValue(entry.name);
+                editButton.setIcon("lucide-check");
+            }
+        });
+    new ButtonComponent(entryButtons)
+        .setClass("clickable-icon")
+        .setTooltip("Remove")
+        .setIcon("lucide-trash")
+        .onClick(async () => {
+            removeEntry(tracker.entries, entry);
+            await saveTracker(tracker, this.app, getSectionInfo());
+        });
+
+    if (entry.subEntries) {
+        for (let sub of entry.subEntries)
+            addEditableTableRow(tracker, sub, table, newSegmentNameBox, running, getSectionInfo, settings, indent + 1);
+    }
 }
