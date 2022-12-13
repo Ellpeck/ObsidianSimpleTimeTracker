@@ -230,12 +230,12 @@ function createMarkdownTable(tracker: Tracker, settings: SimpleTimeTrackerSettin
     for (let r = 0; r < table.length; r++) {
         // add separators after first row
         if (r == 1)
-            ret += Array.from(Array(4).keys()).map(i => "-".repeat(widths[i])).join(" | ") + "\n";
+            ret += "| " + Array.from(Array(4).keys()).map(i => "-".repeat(widths[i])).join(" | ") + " |\n";
 
         let row: string[] = [];
         for (let i = 0; i < 4; i++)
             row.push(table[r][i].padEnd(widths[i], " "));
-        ret += row.join(" | ") + "\n";
+        ret += "| " + row.join(" | ") + " |\n";
     }
     return ret;
 }
