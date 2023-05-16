@@ -271,8 +271,16 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
     let nameBox = new TextComponent(name).setValue(entry.name);
     nameBox.inputEl.hidden = true;
 
-    row.createEl("td", { text: entry.startTime ? formatTimestamp(entry.startTime, settings) : "" });
-    row.createEl("td", { text: entry.endTime ? formatTimestamp(entry.endTime, settings) : "" });
+    let startTime = row.createEl("td");
+    let startTimePar = startTime.createEl("span", { text: entry.startTime ? formatTimestamp(entry.startTime, settings) : "" });
+    let startTimeBox = new TextComponent(startTime).setValue(entry.startTime ? formatTimestamp(entry.startTime, settings) : "");
+    startTimeBox.inputEl.hidden = true;
+
+    let endTime = row.createEl("td");
+    let endTimePar = endTime.createEl("span", { text: entry.endTime ? formatTimestamp(entry.endTime, settings) : "" });
+    let endTimeBox = new TextComponent(endTime).setValue(entry.endTime ? formatTimestamp(entry.endTime, settings) : "");
+    endTimeBox.inputEl.hidden = true;
+
     row.createEl("td", { text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry)) : "" });
 
     let entryButtons = row.createEl("td");
@@ -294,16 +302,52 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
             if (namePar.hidden) {
                 namePar.hidden = false;
                 nameBox.inputEl.hidden = true;
+                if (entry.startTime) {
+                    startTimePar.hidden = false;
+                    startTimeBox.inputEl.hidden = true;
+                }
+                if (entry.endTime) {
+                    endTimePar.hidden = false;
+                    endTimeBox.inputEl.hidden = true;
+                }
                 editButton.setIcon("lucide-pencil");
-                if (nameBox.getValue()) {
-                    entry.name = nameBox.getValue();
-                    namePar.setText(entry.name);
+                if (nameBox.getValue() || startTimeBox.getValue() || endTimeBox.getValue()) {
+                    if (nameBox.getValue()) {
+                        entry.name = nameBox.getValue();
+                        namePar.setText(entry.name);
+                    }
+                    if (startTimeBox.getValue()) {
+                        if (moment(startTimeBox.getValue(), settings.timestampFormat).isValid()) {
+                            entry.startTime = moment(startTimeBox.getValue(), settings.timestampFormat).format("X");
+                            startTimePar.setText(entry.startTime ? formatTimestamp(entry.startTime, settings) : "" );
+                        } else {
+                            startTimeBox.setText(entry.startTime ? formatTimestamp(entry.startTime, settings) : "" );
+                        }
+                    }
+                    if (endTimeBox.getValue()) {
+                        if (moment(endTimeBox.getValue(), settings.timestampFormat).isValid()) {
+                            entry.endTime = moment(endTimeBox.getValue(), settings.timestampFormat).format("X");
+                            endTimePar.setText(entry.endTime ? formatTimestamp(entry.endTime, settings) : "" );
+                        } else {
+                            endTimeBox.setText(entry.endTime ? formatTimestamp(entry.endTime, settings) : "" );
+                        }
+                    }
                     await saveTracker(tracker, this.app, getSectionInfo());
                 }
             } else {
                 namePar.hidden = true;
                 nameBox.inputEl.hidden = false;
                 nameBox.setValue(entry.name);
+                if (entry.startTime) {
+                    startTimePar.hidden = true;
+                    startTimeBox.inputEl.hidden = false;
+                    startTimeBox.setValue(formatTimestamp(entry.startTime, settings));
+                }
+                if (entry.endTime) {
+                    endTimePar.hidden = true;
+                    endTimeBox.inputEl.hidden = false;
+                    endTimeBox.setValue(formatTimestamp(entry.endTime, settings));
+                }
                 editButton.setIcon("lucide-check");
             }
         });
