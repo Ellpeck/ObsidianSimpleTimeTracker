@@ -204,6 +204,12 @@ function formatTimestamp(timestamp: number, settings: SimpleTimeTrackerSettings)
 function formatDuration(totalTime: number): string {
     let duration = moment.duration(totalTime);
     let ret = "";
+	if (duration.years() > 0)
+		ret += duration.years() + "y ";
+	if (duration.months() > 0)
+		ret += duration.months() + "m ";
+	if (duration.days() > 0)
+		ret += duration.days() + "d ";
     if (duration.hours() > 0)
         ret += duration.hours() + "h ";
     if (duration.minutes() > 0)
