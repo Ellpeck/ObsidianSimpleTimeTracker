@@ -1,64 +1,64 @@
 .simple-time-tracker-support {
-	max-width: 50%;
-	width: 400px;
-	height: auto;
+    max-width: 50%;
+    width: 400px;
+    height: auto;
 }
 
 .simple-time-tracker-btn,
 .simple-time-tracker-txt {
-	display: block;
-	margin-left: auto;
-	margin-right: auto;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .simple-time-tracker-txt {
-	text-align: center;
+    text-align: center;
 }
 
 .simple-time-tracker-btn {
-	margin-top: 10px;
-	margin-bottom: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 .simple-time-tracker-btn svg {
-	width: 32px;
-	height: 32px;
+    width: 32px;
+    height: 32px;
 }
 
 .simple-time-tracker-bottom button {
-	margin: 10px 5px 10px 5px;
+    margin: 10px 5px 10px 5px;
 }
 
 .simple-time-tracker-timers,
 .simple-time-tracker-bottom {
-	display: flex;
-	justify-content: center;
-	text-align: center;
+    display: flex;
+    justify-content: center;
+    text-align: center;
 }
 
 .simple-time-tracker-timers span {
-	display: block;
+    display: block;
 }
 
 .simple-time-tracker-timer {
-	margin: 20px;
+    margin: 20px;
 }
 
 .simple-time-tracker-timer-time {
-	font-size: xx-large;
-	font-weight: bolder;
+    font-size: xx-large;
+    font-weight: bolder;
 }
 
 .simple-time-tracker-table {
-	width: 100%;
-	margin-top: 20px;
+    width: 100%;
+    margin-top: 20px;
 }
 
 .simple-time-tracker-table td,
 .simple-time-tracker-table th {
-	border: none;
+    border: none;
 }
 
 .simple-time-tracker-table .clickable-icon {
-	display: inline;
+    display: inline;
 }

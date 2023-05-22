@@ -36,7 +36,7 @@ export function loadTracker(json: string): Tracker {
             console.log(`Failed to parse Tracker from ${json}`);
         }
     }
-    return { entries: [] };
+    return {entries: []};
 }
 
 export function displayTracker(tracker: Tracker, element: HTMLElement, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings): void {
@@ -61,29 +61,29 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getSectio
     newSegmentNameBox.inputEl.addClass("simple-time-tracker-txt");
 
     // add timers
-    let timer = element.createDiv({ cls: "simple-time-tracker-timers" });
-    let currentDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
-    let current = currentDiv.createEl("span", { cls: "simple-time-tracker-timer-time" });
-    currentDiv.createEl("span", { text: "Current" });
-    let totalDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
-    let total = totalDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "0s" });
-    totalDiv.createEl("span", { text: "Total" });
+    let timer = element.createDiv({cls: "simple-time-tracker-timers"});
+    let currentDiv = timer.createEl("div", {cls: "simple-time-tracker-timer"});
+    let current = currentDiv.createEl("span", {cls: "simple-time-tracker-timer-time"});
+    currentDiv.createEl("span", {text: "Current"});
+    let totalDiv = timer.createEl("div", {cls: "simple-time-tracker-timer"});
+    let total = totalDiv.createEl("span", {cls: "simple-time-tracker-timer-time", text: "0s"});
+    totalDiv.createEl("span", {text: "Total"});
 
     if (tracker.entries.length > 0) {
         // add table
-        let table = element.createEl("table", { cls: "simple-time-tracker-table" });
+        let table = element.createEl("table", {cls: "simple-time-tracker-table"});
         table.createEl("tr").append(
-            createEl("th", { text: "Segment" }),
-            createEl("th", { text: "Start time" }),
-            createEl("th", { text: "End time" }),
-            createEl("th", { text: "Duration" }),
+            createEl("th", {text: "Segment"}),
+            createEl("th", {text: "Start time"}),
+            createEl("th", {text: "End time"}),
+            createEl("th", {text: "Duration"}),
             createEl("th"));
 
         for (let entry of tracker.entries)
             addEditableTableRow(tracker, entry, table, newSegmentNameBox, running, getSectionInfo, settings, 0);
 
         // add copy buttons
-        let buttons = element.createEl("div", { cls: "simple-time-tracker-bottom" });
+        let buttons = element.createEl("div", {cls: "simple-time-tracker-bottom"});
         new ButtonComponent(buttons)
             .setButtonText("Copy as table")
             .onClick(() => navigator.clipboard.writeText(createMarkdownTable(tracker, settings)));
@@ -107,22 +107,22 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getSectio
 function startSubEntry(entry: Entry, name: string) {
     // if this entry is not split yet, we add its time as a sub-entry instead
     if (!entry.subEntries) {
-        entry.subEntries = [{ ...entry, name: `Part 1` }];
+        entry.subEntries = [{...entry, name: `Part 1`}];
         entry.startTime = null;
         entry.endTime = null;
     }
 
     if (!name)
         name = `Part ${entry.subEntries.length + 1}`;
-    entry.subEntries.push({ name: name, startTime: moment().unix(), endTime: null, subEntries: null });
+    entry.subEntries.push({name: name, startTime: moment().unix(), endTime: null, subEntries: null});
 }
 
 function startNewEntry(tracker: Tracker, name: string): void {
     if (!name)
         name = `Segment ${tracker.entries.length + 1}`;
-    let entry: Entry = { name: name, startTime: moment().unix(), endTime: null, subEntries: null };
+    let entry: Entry = {name: name, startTime: moment().unix(), endTime: null, subEntries: null};
     tracker.entries.push(entry);
-};
+}
 
 function endRunningEntry(tracker: Tracker): void {
     let entry = getRunningEntry(tracker.entries);
@@ -260,14 +260,14 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
     let row = table.createEl("tr");
 
     let name = row.createEl("td");
-    let namePar = name.createEl("span", { text: entry.name });
+    let namePar = name.createEl("span", {text: entry.name});
     namePar.style.marginLeft = `${indent}em`;
     let nameBox = new TextComponent(name).setValue(entry.name);
     nameBox.inputEl.hidden = true;
 
-    row.createEl("td", { text: entry.startTime ? formatTimestamp(entry.startTime, settings) : "" });
-    row.createEl("td", { text: entry.endTime ? formatTimestamp(entry.endTime, settings) : "" });
-    row.createEl("td", { text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry)) : "" });
+    row.createEl("td", {text: entry.startTime ? formatTimestamp(entry.startTime, settings) : ""});
+    row.createEl("td", {text: entry.endTime ? formatTimestamp(entry.endTime, settings) : ""});
+    row.createEl("td", {text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry)) : ""});
 
     let entryButtons = row.createEl("td");
     if (!running) {
