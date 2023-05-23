@@ -93,14 +93,14 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, file: str
     }
 
 
-    setCountdownValues(tracker, current, total, currentDiv);
+    setCountdownValues(tracker, current, total, currentDiv, settings);
     let intervalId = window.setInterval(() => {
         // we delete the interval timer when the element is removed
         if (!element.isConnected) {
             window.clearInterval(intervalId);
             return;
         }
-        setCountdownValues(tracker, current, total, currentDiv);
+        setCountdownValues(tracker, current, total, currentDiv, settings);
     }, 1000);
 }
 
@@ -186,32 +186,38 @@ function getTotalDuration(entries: Entry[]): number {
     return ret;
 }
 
-function setCountdownValues(tracker: Tracker, current: HTMLElement, total: HTMLElement, currentDiv: HTMLDivElement) {
+function setCountdownValues(tracker: Tracker, current: HTMLElement, total: HTMLElement, currentDiv: HTMLDivElement, settings: SimpleTimeTrackerSettings) {
     let running = getRunningEntry(tracker.entries);
     if (running && !running.endTime) {
-        current.setText(formatDuration(getDuration(running)));
+        current.setText(formatDuration(getDuration(running), settings));
         currentDiv.hidden = false;
     } else {
         currentDiv.hidden = true;
     }
-    total.setText(formatDuration(getTotalDuration(tracker.entries)));
+    total.setText(formatDuration(getTotalDuration(tracker.entries), settings));
 }
 
 function formatTimestamp(timestamp: number, settings: SimpleTimeTrackerSettings): string {
     return moment.unix(timestamp).format(settings.timestampFormat);
 }
 
-function formatDuration(totalTime: number): string {
-    let duration = moment.duration(totalTime);
+function formatDuration(totalTime: number, settings: SimpleTimeTrackerSettings): string {
     let ret = "";
-    if (duration.years() > 0)
-        ret += duration.years() + "y ";
-    if (duration.months() > 0)
-        ret += duration.months() + "m ";
-    if (duration.days() > 0)
-        ret += duration.days() + "d ";
-    if (duration.hours() > 0)
-        ret += duration.hours() + "h ";
+    let duration = moment.duration(totalTime);
+    let hours: number;
+    if (settings.fineGrainedDurations) {
+        if (duration.years() > 0)
+            ret += duration.years() + "y ";
+        if (duration.months() > 0)
+            ret += duration.months() + "M ";
+        if (duration.days() > 0)
+            ret += duration.days() + "d ";
+        hours = duration.hours();
+    } else {
+        hours = Math.floor(duration.asHours());
+    }
+    if (hours > 0)
+        ret += hours + "h ";
     if (duration.minutes() > 0)
         ret += duration.minutes() + "m ";
     ret += duration.seconds() + "s";
@@ -222,7 +228,7 @@ function createMarkdownTable(tracker: Tracker, settings: SimpleTimeTrackerSettin
     let table = [["Segment", "Start time", "End time", "Duration"]];
     for (let entry of tracker.entries)
         table.push(...createTableSection(entry, settings));
-    table.push(["**Total**", "", "", `**${formatDuration(getTotalDuration(tracker.entries))}**`]);
+    table.push(["**Total**", "", "", `**${formatDuration(getTotalDuration(tracker.entries), settings)}**`]);
 
     let ret = "";
     // calculate the width every column needs to look neat when monospaced
@@ -254,7 +260,7 @@ function createTableSection(entry: Entry, settings: SimpleTimeTrackerSettings): 
         entry.name,
         entry.startTime ? formatTimestamp(entry.startTime, settings) : "",
         entry.endTime ? formatTimestamp(entry.endTime, settings) : "",
-        entry.endTime || entry.subEntries ? formatDuration(getDuration(entry)) : ""]];
+        entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : ""]];
     if (entry.subEntries) {
         for (let sub of entry.subEntries)
             ret.push(...createTableSection(sub, settings));
@@ -273,7 +279,7 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
 
     row.createEl("td", {text: entry.startTime ? formatTimestamp(entry.startTime, settings) : ""});
     row.createEl("td", {text: entry.endTime ? formatTimestamp(entry.endTime, settings) : ""});
-    row.createEl("td", {text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry)) : ""});
+    row.createEl("td", {text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : ""});
 
     let entryButtons = row.createEl("td");
     if (!running) {

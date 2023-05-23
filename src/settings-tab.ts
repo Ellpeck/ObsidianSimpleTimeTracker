@@ -41,6 +41,17 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
                 });
             });
 
+        new Setting(this.containerEl)
+            .setName("Fine-Grained Durations")
+            .setDesc("Whether durations should include days, months and years. If this is disabled, additional time units will be displayed as part of the hours.")
+            .addToggle(t => {
+                t.setValue(this.plugin.settings.fineGrainedDurations);
+                t.onChange(async v => {
+                    this.plugin.settings.fineGrainedDurations = v;
+                    await this.plugin.saveSettings();
+                });
+            });
+
         this.containerEl.createEl("hr");
         this.containerEl.createEl("p", {text: "If you like this plugin and want to support its development, you can do so through my website by clicking this fancy image!"});
         this.containerEl.createEl("a", {href: "https://ellpeck.de/support"})
