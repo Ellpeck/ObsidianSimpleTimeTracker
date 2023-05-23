@@ -1,4 +1,4 @@
-import { moment, App, MarkdownSectionInformation, ButtonComponent, TextComponent } from "obsidian";
+import { moment, App, MarkdownSectionInformation, ButtonComponent, TextComponent, TFile } from "obsidian";
 import { SimpleTimeTrackerSettings } from "./settings";
 
 export interface Tracker {
@@ -12,8 +12,8 @@ export interface Entry {
     subEntries: Entry[];
 }
 
-export async function saveTracker(tracker: Tracker, app: App, section: MarkdownSectionInformation): Promise<void> {
-    let file = app.workspace.getActiveFile();
+export async function saveTracker(tracker: Tracker, app: App, fileName: string, section: MarkdownSectionInformation): Promise<void> {
+    let file = app.vault.getAbstractFileByPath(fileName) as TFile;
     if (!file)
         return;
     let content = await app.vault.read(file);
@@ -39,7 +39,7 @@ export function loadTracker(json: string): Tracker {
     return {entries: []};
 }
 
-export function displayTracker(tracker: Tracker, element: HTMLElement, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings): void {
+export function displayTracker(tracker: Tracker, element: HTMLElement, file: string, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings): void {
     // add start/stop controls
     let running = isRunning(tracker);
     let btn = new ButtonComponent(element)
@@ -52,7 +52,7 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getSectio
             } else {
                 startNewEntry(tracker, newSegmentNameBox.getValue());
             }
-            await saveTracker(tracker, this.app, getSectionInfo());
+            await saveTracker(tracker, this.app, file, getSectionInfo());
         });
     btn.buttonEl.addClass("simple-time-tracker-btn");
     let newSegmentNameBox = new TextComponent(element)
@@ -80,7 +80,7 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getSectio
             createEl("th"));
 
         for (let entry of tracker.entries)
-            addEditableTableRow(tracker, entry, table, newSegmentNameBox, running, getSectionInfo, settings, 0);
+            addEditableTableRow(tracker, entry, table, newSegmentNameBox, running, file, getSectionInfo, settings, 0);
 
         // add copy buttons
         let buttons = element.createEl("div", {cls: "simple-time-tracker-bottom"});
@@ -204,12 +204,12 @@ function formatTimestamp(timestamp: number, settings: SimpleTimeTrackerSettings)
 function formatDuration(totalTime: number): string {
     let duration = moment.duration(totalTime);
     let ret = "";
-	if (duration.years() > 0)
-		ret += duration.years() + "y ";
-	if (duration.months() > 0)
-		ret += duration.months() + "m ";
-	if (duration.days() > 0)
-		ret += duration.days() + "d ";
+    if (duration.years() > 0)
+        ret += duration.years() + "y ";
+    if (duration.months() > 0)
+        ret += duration.months() + "m ";
+    if (duration.days() > 0)
+        ret += duration.days() + "d ";
     if (duration.hours() > 0)
         ret += duration.hours() + "h ";
     if (duration.minutes() > 0)
@@ -262,7 +262,7 @@ function createTableSection(entry: Entry, settings: SimpleTimeTrackerSettings): 
     return ret;
 }
 
-function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, running: boolean, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number) {
+function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, running: boolean, file: string, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number) {
     let row = table.createEl("tr");
 
     let name = row.createEl("td");
@@ -283,7 +283,7 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
             .setTooltip("Continue")
             .onClick(async () => {
                 startSubEntry(entry, newSegmentNameBox.getValue());
-                await saveTracker(tracker, this.app, getSectionInfo());
+                await saveTracker(tracker, this.app, file, getSectionInfo());
             });
     }
     let editButton = new ButtonComponent(entryButtons)
@@ -298,7 +298,7 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
                 if (nameBox.getValue()) {
                     entry.name = nameBox.getValue();
                     namePar.setText(entry.name);
-                    await saveTracker(tracker, this.app, getSectionInfo());
+                    await saveTracker(tracker, this.app, file, getSectionInfo());
                 }
             } else {
                 namePar.hidden = true;
@@ -313,11 +313,11 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
         .setIcon("lucide-trash")
         .onClick(async () => {
             removeEntry(tracker.entries, entry);
-            await saveTracker(tracker, this.app, getSectionInfo());
+            await saveTracker(tracker, this.app, file, getSectionInfo());
         });
 
     if (entry.subEntries) {
         for (let sub of entry.subEntries)
-            addEditableTableRow(tracker, sub, table, newSegmentNameBox, running, getSectionInfo, settings, indent + 1);
+            addEditableTableRow(tracker, sub, table, newSegmentNameBox, running, file, getSectionInfo, settings, indent + 1);
     }
 }
