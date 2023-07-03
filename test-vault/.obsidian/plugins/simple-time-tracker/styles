@@ -1,3 +1,7 @@
+.simple-time-tracker-container {
+    overflow-x: scroll;
+}
+
 .simple-time-tracker-support {
     max-width: 50%;
     width: 400px;
@@ -61,4 +65,9 @@
 
 .simple-time-tracker-table .clickable-icon {
     display: inline;
+}
+
+.simple-time-tracker-input {
+    max-width: 150px;
+    min-width: 100px;
 }
