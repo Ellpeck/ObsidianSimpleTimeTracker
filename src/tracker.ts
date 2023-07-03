@@ -282,7 +282,6 @@ class EditableField {
         this.label = this.cell.createEl("span", { text: value });
         this.label.style.marginLeft = `${indent}em`;
         this.box = new TextComponent(this.cell).setValue(value);
-        this.box.inputEl.width = 10;
         this.box.inputEl.classList.add('simple-time-tracker-input');
         this.box.inputEl.hide();
     }
