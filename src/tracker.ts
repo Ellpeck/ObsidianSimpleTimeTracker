@@ -202,8 +202,12 @@ function formatTimestamp(timestamp: number, settings: SimpleTimeTrackerSettings)
     return moment.unix(timestamp).format(settings.timestampFormat);
 }
 
-function unFormatTimestamp(formatted: string, settings: SimpleTimeTrackerSettings): number {
-    return moment(formatted, settings.timestampFormat).unix();
+function formatEditableTimestamp(timestamp: number, settings: SimpleTimeTrackerSettings) {
+    return moment.unix(timestamp).format(settings.editableTimestampFormat);
+}
+
+function unformatEditableTimestamp(formatted: string, settings: SimpleTimeTrackerSettings): number {
+    return moment(formatted, settings.editableTimestampFormat).unix();
 }
 
 function formatDuration(totalTime: number, settings: SimpleTimeTrackerSettings): string {
@@ -294,7 +298,7 @@ class EditableField {
         this.box.inputEl.show();
     }
     endEdit(): string {
-        let value = this.box.getValue()
+        const value = this.box.getValue();
         this.label.setText(value);
         this.box.inputEl.hide();
         this.label.hidden = false;
@@ -302,16 +306,38 @@ class EditableField {
     }
 }
 
+class EditableTimestampField extends EditableField {
+    settings: SimpleTimeTrackerSettings;
+    constructor(row: HTMLTableRowElement, indent: number, value: string, settings: SimpleTimeTrackerSettings) {
+        const timestamp = Number(value);
+        value = timestamp > 0 ? formatTimestamp(timestamp, settings) : "";
+        super(row, indent, value);
+        this.settings = settings;
+    }
+    beginEdit(value: string) {
+        value = formatEditableTimestamp(Number(value), this.settings);
+        super.beginEdit(value);
+    }
+    endEdit(): string {
+        const value = this.box.getValue();
+        const timestamp = unformatEditableTimestamp(value, this.settings);
+        const displayValue = formatTimestamp(timestamp, this.settings);
+        this.label.setText(displayValue);
+        this.box.inputEl.hide();
+        this.label.hidden = false;
+        return value;
+    }
+    getTimestamp(): number {
+        return unformatEditableTimestamp(this.box.getValue(), this.settings);
+    }
+}
+
 function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, running: boolean, file: string, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number) {
     let row = table.createEl("tr");
 
     let nameField = new EditableField(row, indent, entry.name);
-
-    let startValue = entry.startTime ? formatTimestamp(entry.startTime, settings) : "";
-    let startField = new EditableField(row, indent, startValue);
-
-    let endValue = entry.endTime ? formatTimestamp(entry.endTime, settings) : "";
-    let endField = new EditableField(row, indent, endValue);
+    let startField = new EditableTimestampField(row, indent, String(entry.startTime), settings);
+    let endField = new EditableTimestampField(row, indent, String(entry.endTime), settings);
 
     row.createEl("td", { text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : "" });
 
@@ -333,14 +359,16 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
         .onClick(async () => {
             if (nameField.editing()) {
                 entry.name = nameField.endEdit();
-                entry.startTime = unFormatTimestamp(startField.endEdit(), settings);
-                entry.endTime = unFormatTimestamp(endField.endEdit(), settings);
+                startField.endEdit();
+                entry.startTime = startField.getTimestamp();
+                endField.endEdit();
+                entry.endTime = endField.getTimestamp();
                 await saveTracker(tracker, this.app, file, getSectionInfo());
                 editButton.setIcon("lucide-pencil");
             } else {
                 nameField.beginEdit(entry.name);
-                startField.beginEdit(formatTimestamp(entry.startTime, settings));
-                endField.beginEdit(formatTimestamp(entry.endTime, settings));
+                startField.beginEdit(String(entry.startTime));
+                endField.beginEdit(String(entry.endTime));
                 editButton.setIcon("lucide-check");
             }
         });
