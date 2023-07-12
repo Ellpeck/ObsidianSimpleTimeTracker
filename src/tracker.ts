@@ -309,35 +309,51 @@ class EditableField {
 class EditableTimestampField extends EditableField {
     settings: SimpleTimeTrackerSettings;
     constructor(row: HTMLTableRowElement, indent: number, value: string, settings: SimpleTimeTrackerSettings) {
-        const timestamp = Number(value);
-        value = timestamp > 0 ? formatTimestamp(timestamp, settings) : "";
+        if (value) {
+            const timestamp = Number(value);
+            value = timestamp > 0 ? formatTimestamp(timestamp, settings) : "";
+        }
         super(row, indent, value);
         this.settings = settings;
     }
     beginEdit(value: string) {
-        value = formatEditableTimestamp(Number(value), this.settings);
+        if (value) {
+            value = formatEditableTimestamp(Number(value), this.settings);
+        }
         super.beginEdit(value);
     }
     endEdit(): string {
         const value = this.box.getValue();
-        const timestamp = unformatEditableTimestamp(value, this.settings);
-        const displayValue = formatTimestamp(timestamp, this.settings);
+        let displayValue = value;
+        if (value) {
+            const timestamp = unformatEditableTimestamp(value, this.settings);
+            displayValue = formatTimestamp(timestamp, this.settings);
+        }
         this.label.setText(displayValue);
         this.box.inputEl.hide();
         this.label.hidden = false;
         return value;
     }
     getTimestamp(): number {
-        return unformatEditableTimestamp(this.box.getValue(), this.settings);
+        if (this.box.getValue()) {
+            return unformatEditableTimestamp(this.box.getValue(), this.settings);
+        } else {
+            return null;
+        }
     }
+}
+
+function nullableNumberToString(value: number) {
+    if (value == null) return '';
+    return String(value);
 }
 
 function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, running: boolean, file: string, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number) {
     let row = table.createEl("tr");
 
     let nameField = new EditableField(row, indent, entry.name);
-    let startField = new EditableTimestampField(row, indent, String(entry.startTime), settings);
-    let endField = new EditableTimestampField(row, indent, String(entry.endTime), settings);
+    let startField = new EditableTimestampField(row, indent, nullableNumberToString(entry.startTime), settings);
+    let endField = new EditableTimestampField(row, indent, nullableNumberToString(entry.endTime), settings);
 
     row.createEl("td", { text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : "" });
 
@@ -367,8 +383,8 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
                 editButton.setIcon("lucide-pencil");
             } else {
                 nameField.beginEdit(entry.name);
-                startField.beginEdit(String(entry.startTime));
-                endField.beginEdit(String(entry.endTime));
+                startField.beginEdit(nullableNumberToString(entry.startTime));
+                endField.beginEdit(nullableNumberToString(entry.endTime));
                 editButton.setIcon("lucide-check");
             }
         });
