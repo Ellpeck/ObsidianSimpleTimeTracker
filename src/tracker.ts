@@ -1,6 +1,7 @@
 import { moment, App, MarkdownSectionInformation, ButtonComponent, TextComponent, TFile } from "obsidian";
 import { SimpleTimeTrackerSettings } from "./settings";
 
+
 export interface Tracker {
     entries: Entry[];
 }
@@ -11,6 +12,158 @@ export interface Entry {
     endTime: number;
     subEntries: Entry[];
 }
+
+class EditableTableCell {
+    cell : HTMLTableCellElement;
+    show_component : HTMLSpanElement;
+    input_component : TextComponent;
+    tracker: Tracker;
+    app: App;
+    entry: Entry;
+    fileName: string;
+    getSectionInfo: () => MarkdownSectionInformation;
+
+    public constructor(row : HTMLTableRowElement, tracker: Tracker, entry: Entry, app: App, fileName: string, getSectionInfo: () => MarkdownSectionInformation) {
+        this.cell = row.createEl("td");
+        this.show_component = this.cell.createEl("span");
+        this.input_component = new TextComponent(this.cell);
+        this.input_component.inputEl.hidden = true;
+        this.tracker = tracker;
+        this.app = app;
+        this.fileName = fileName;
+        this.getSectionInfo = getSectionInfo;
+        this.entry = entry;
+    }
+
+    public hasSubEntry() : boolean {
+        return this.entry.subEntries != null && this.entry.subEntries.length > 0;
+    }
+
+    public editable() : boolean {
+        if (this.show_component.hidden) {
+            return true;
+        }
+        return false;
+    }
+
+    public setText(text : string) {
+        this.show_component.setText(text);
+        this.input_component.setValue(text);
+    }
+
+    public getText() {
+        return this.input_component.getValue();
+    }
+
+    public changeEditableMode() : void {
+        this.show_component.hidden = true;
+        this.input_component.inputEl.hidden = false;
+        this.input_component.setValue(this.show_component.getText());
+    }
+
+    protected async saveContent() : Promise<void> {
+        await saveTracker(this.tracker, this.app, this.fileName, this.getSectionInfo())
+    }
+
+    protected setEntry() : void {
+    
+    }
+
+    protected checkValid() : boolean {
+        return this.input_component.getValue().length > 0;
+    }
+
+    public changeShowMode() : void {
+        this.show_component.hidden = false;
+        this.input_component.inputEl.hidden = true;
+        if (this.checkValid()) {
+            this.setEntry();
+            this.show_component.setText(this.getText());
+            this.saveContent();
+        } else {
+            this.input_component.setValue(this.show_component.getText());
+        }
+    }
+}
+
+class NameTableCell extends EditableTableCell {
+    public constructor(row : HTMLTableRowElement, tracker: Tracker, entry: Entry,
+            app: App, fileName: string,
+            getSectionInfo: () => MarkdownSectionInformation, indent: number) {
+        super(row, tracker, entry, app, fileName, getSectionInfo);
+        this.show_component.style.marginLeft = `${indent}em`;
+    }
+
+    protected override setEntry() : void {
+        this.entry.name = this.getText();
+    }
+}
+
+class DateTableCell extends EditableTableCell {
+    settings : SimpleTimeTrackerSettings;
+
+    public constructor(row : HTMLTableRowElement, tracker: Tracker, entry: Entry,
+            app: App, fileName: string, getSectionInfo: () => MarkdownSectionInformation,
+            settings: SimpleTimeTrackerSettings) {
+        super(row, tracker, entry, app, fileName, getSectionInfo);
+        this.settings = settings;
+    }
+
+    protected override setEntry() : void {
+        let unix_time = moment(this.getText(), this.settings.timestampFormat, true)
+                        .unix();
+        this.entry.startTime = unix_time;
+    }
+
+    protected override checkValid() : boolean {
+        let time = moment(this.getText(), this.settings.timestampFormat, true);
+        if (!time.isValid()) {
+            return false;
+        }
+        if (time.unix() > moment().unix()) {
+            return false;
+        }
+        return true;
+    }
+
+    public override changeEditableMode() : void {
+        if (!this.hasSubEntry()) {
+            super.changeEditableMode();
+        }
+    }
+    public override changeShowMode() : void {
+        super.changeShowMode();
+    }
+}
+
+class EndTimeDateTableCell extends DateTableCell {
+    start_time_cell : DateTableCell;
+
+    public constructor(row : HTMLTableRowElement, tracker: Tracker, entry: Entry,
+            app: App, fileName: string, getSectionInfo: () => MarkdownSectionInformation,
+            settings: SimpleTimeTrackerSettings, start_time_cell : DateTableCell) {
+        super(row, tracker, entry, app, fileName, getSectionInfo, settings);
+        this.start_time_cell = start_time_cell;
+    }
+    protected override setEntry() : void {
+        let unix_time = moment(this.getText(), this.settings.timestampFormat, true)
+                        .unix();
+        this.entry.endTime = unix_time;
+    }
+
+    protected override checkValid() : boolean {
+        if (!super.checkValid()) {
+            return false;
+        }
+        let start_time_moment = moment(this.start_time_cell.getText(), this.settings.timestampFormat, true);
+        if (start_time_moment.isValid()) {
+            let end_time_unix = moment(this.show_component.getText(), this.settings.timestampFormat, true).unix();
+            return start_time_moment.unix() < end_time_unix;
+        }
+        return false;
+    }
+}
+
 
 export async function saveTracker(tracker: Tracker, app: App, fileName: string, section: MarkdownSectionInformation): Promise<void> {
     let file = app.vault.getAbstractFileByPath(fileName) as TFile;
@@ -271,15 +424,22 @@ function createTableSection(entry: Entry, settings: SimpleTimeTrackerSettings): 
 function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, running: boolean, file: string, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number) {
     let row = table.createEl("tr");
 
-    let name = row.createEl("td");
-    let namePar = name.createEl("span", {text: entry.name});
-    namePar.style.marginLeft = `${indent}em`;
-    let nameBox = new TextComponent(name).setValue(entry.name);
-    nameBox.inputEl.hidden = true;
+    // let name = row.createEl("td");
+    // let namePar = name.createEl("span", {text: entry.name});
+    // namePar.style.marginLeft      = `${indent}em`;
+    // let nameBox = new TextComponent(name).setValue(entry.name);
+    // nameBox.inputEl.hidden = true;
+    let name_cell = new NameTableCell(row, tracker, entry, app, file, getSectionInfo, indent);
+    name_cell.setText(entry.name);
 
-    row.createEl("td", {text: entry.startTime ? formatTimestamp(entry.startTime, settings) : ""});
-    row.createEl("td", {text: entry.endTime ? formatTimestamp(entry.endTime, settings) : ""});
-    row.createEl("td", {text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : ""});
+    let start_time_cell = new DateTableCell(row, tracker, entry, app, file, getSectionInfo, settings);
+    start_time_cell.setText(entry.startTime ? formatTimestamp(entry.startTime, settings) : "");
+    let end_time_cell = new EndTimeDateTableCell(
+            row, tracker, entry, app, file, getSectionInfo, settings, start_time_cell);
+    end_time_cell.setText(entry.endTime ? formatTimestamp(entry.endTime, settings) : "");
+    // row.createEl("td", {text: entry.startTime ? formatTimestamp(entry.startTime, settings) : ""});
+    // row.createEl("td", {text: entry.endTime ? formatTimestamp(entry.endTime, settings) : ""});
+    let duration_cell = row.createEl("td", {text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : ""});
 
     let entryButtons = row.createEl("td");
     if (!running) {
@@ -297,19 +457,16 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
         .setTooltip("Edit")
         .setIcon("lucide-pencil")
         .onClick(async () => {
-            if (namePar.hidden) {
-                namePar.hidden = false;
-                nameBox.inputEl.hidden = true;
+            if (name_cell.editable()) {
+                name_cell.changeShowMode();
+                start_time_cell.changeShowMode();
+                end_time_cell.changeShowMode();
+                duration_cell.setText(entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : "");
                 editButton.setIcon("lucide-pencil");
-                if (nameBox.getValue()) {
-                    entry.name = nameBox.getValue();
-                    namePar.setText(entry.name);
-                    await saveTracker(tracker, this.app, file, getSectionInfo());
-                }
             } else {
-                namePar.hidden = true;
-                nameBox.inputEl.hidden = false;
-                nameBox.setValue(entry.name);
+                name_cell.changeEditableMode();
+                start_time_cell.changeEditableMode();
+                end_time_cell.changeEditableMode();
                 editButton.setIcon("lucide-check");
             }
         });
