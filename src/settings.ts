@@ -1,5 +1,5 @@
 export const defaultSettings: SimpleTimeTrackerSettings = {
-    timestampFormat: "YY-MM-DD hh:mm:ss",
+    timestampFormat: "YY-MM-DD HH:mm:ss",
     csvDelimiter: ",",
     fineGrainedDurations: true
 };
