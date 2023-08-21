@@ -8,6 +8,7 @@ export interface Tracker {
 
 export interface Entry {
     name: string;
+    task: string;
     startTime: number;
     endTime: number;
     subEntries: Entry[];
@@ -96,6 +97,44 @@ class NameTableCell extends EditableTableCell {
 
     protected override setEntry() : void {
         this.entry.name = this.getText();
+    }
+}
+
+class TaskTableCell extends EditableTableCell {
+    public constructor(row : HTMLTableRowElement, tracker: Tracker, entry: Entry,
+        app: App, fileName: string,
+        getSectionInfo: () => MarkdownSectionInformation, is_top_entry : boolean) {
+    super(row, tracker, entry, app, fileName, getSectionInfo);
+    if (!is_top_entry) {
+        this.input_component = null;
+    } 
+}
+
+    protected override setEntry() : void {
+        this.entry.task = this.getText();
+    }
+
+    public override changeEditableMode() : void {
+        // 如果是subentry，不需要task
+        if (this.input_component == null) {
+            return;
+        }
+        super.changeEditableMode();
+    }
+
+    public override changeShowMode() : void {
+        // 如果是subentry，不需要task
+        if (this.input_component == null) {
+            return;
+        }
+        super.changeShowMode();
+    }
+
+    public setText(text : string) {
+        this.show_component.setText(text);
+        if (this.input_component) {
+            this.input_component.setValue(text);
+        }
     }
 }
 
@@ -227,13 +266,14 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, file: str
         let table = element.createEl("table", {cls: "simple-time-tracker-table"});
         table.createEl("tr").append(
             createEl("th", {text: "Segment"}),
+            createEl("th", {text: "task"}),
             createEl("th", {text: "Start time"}),
             createEl("th", {text: "End time"}),
             createEl("th", {text: "Duration"}),
             createEl("th"));
 
         for (let entry of tracker.entries)
-            addEditableTableRow(tracker, entry, table, newSegmentNameBox, running, file, getSectionInfo, settings, 0);
+            addEditableTableRow(tracker, entry, table, newSegmentNameBox, running, file, getSectionInfo, settings, 0, true);
 
         // add copy buttons
         let buttons = element.createEl("div", {cls: "simple-time-tracker-bottom"});
@@ -267,13 +307,13 @@ function startSubEntry(entry: Entry, name: string) {
 
     if (!name)
         name = `Part ${entry.subEntries.length + 1}`;
-    entry.subEntries.push({name: name, startTime: moment().unix(), endTime: null, subEntries: null});
+    entry.subEntries.push({name: name, task : "", startTime: moment().unix(), endTime: null, subEntries: null});
 }
 
 function startNewEntry(tracker: Tracker, name: string): void {
     if (!name)
         name = `Segment ${tracker.entries.length + 1}`;
-    let entry: Entry = {name: name, startTime: moment().unix(), endTime: null, subEntries: null};
+    let entry: Entry = {name: name, task: "", startTime: moment().unix(), endTime: null, subEntries: null};
     tracker.entries.push(entry);
 }
 
@@ -421,24 +461,18 @@ function createTableSection(entry: Entry, settings: SimpleTimeTrackerSettings): 
     return ret;
 }
 
-function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, running: boolean, file: string, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number) {
+function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, running: boolean, file: string, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number, is_top_entry : boolean) {
     let row = table.createEl("tr");
-
-    // let name = row.createEl("td");
-    // let namePar = name.createEl("span", {text: entry.name});
-    // namePar.style.marginLeft      = `${indent}em`;
-    // let nameBox = new TextComponent(name).setValue(entry.name);
-    // nameBox.inputEl.hidden = true;
     let name_cell = new NameTableCell(row, tracker, entry, app, file, getSectionInfo, indent);
     name_cell.setText(entry.name);
+    let task_cell = new TaskTableCell(row, tracker, entry, app, file, getSectionInfo, is_top_entry);
+    task_cell.setText(entry.task);
 
     let start_time_cell = new DateTableCell(row, tracker, entry, app, file, getSectionInfo, settings);
     start_time_cell.setText(entry.startTime ? formatTimestamp(entry.startTime, settings) : "");
     let end_time_cell = new EndTimeDateTableCell(
             row, tracker, entry, app, file, getSectionInfo, settings, start_time_cell);
     end_time_cell.setText(entry.endTime ? formatTimestamp(entry.endTime, settings) : "");
-    // row.createEl("td", {text: entry.startTime ? formatTimestamp(entry.startTime, settings) : ""});
-    // row.createEl("td", {text: entry.endTime ? formatTimestamp(entry.endTime, settings) : ""});
     let duration_cell = row.createEl("td", {text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : ""});
 
     let entryButtons = row.createEl("td");
@@ -461,12 +495,14 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
                 name_cell.changeShowMode();
                 start_time_cell.changeShowMode();
                 end_time_cell.changeShowMode();
+                task_cell.changeShowMode();
                 duration_cell.setText(entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : "");
                 editButton.setIcon("lucide-pencil");
             } else {
                 name_cell.changeEditableMode();
                 start_time_cell.changeEditableMode();
                 end_time_cell.changeEditableMode();
+                task_cell.changeEditableMode();
                 editButton.setIcon("lucide-check");
             }
         });
@@ -481,6 +517,6 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
 
     if (entry.subEntries) {
         for (let sub of entry.subEntries)
-            addEditableTableRow(tracker, sub, table, newSegmentNameBox, running, file, getSectionInfo, settings, indent + 1);
+            addEditableTableRow(tracker, sub, table, newSegmentNameBox, running, file, getSectionInfo, settings, indent + 1, false);
     }
 }
