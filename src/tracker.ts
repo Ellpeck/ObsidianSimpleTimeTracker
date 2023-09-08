@@ -386,9 +386,9 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
             if (nameField.editing()) {
                 entry.name = nameField.endEdit();
                 startField.endEdit();
-                entry.startTime = startField.getTimestamp().toString();
+                entry.startTime = startField.getTimestamp();
                 endField.endEdit();
-                entry.endTime = endField.getTimestamp().toString();
+                entry.endTime = endField.getTimestamp();
                 await saveTracker(tracker, this.app, file, getSectionInfo());
                 editButton.setIcon("lucide-pencil");
             } else {
