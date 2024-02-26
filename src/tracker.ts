@@ -82,7 +82,7 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, file: str
             createEl("th", {text: "Duration"}),
             createEl("th"));
 
-        for (let entry of tracker.entries)
+        for (let entry of orderedEntries(tracker.entries, settings))
             addEditableTableRow(tracker, entry, table, newSegmentNameBox, running, file, getSectionInfo, settings, 0);
 
         // add copy buttons
@@ -249,7 +249,7 @@ function fixLegacyTimestamps(entries: Entry[]): void {
 
 function createMarkdownTable(tracker: Tracker, settings: SimpleTimeTrackerSettings): string {
     let table = [["Segment", "Start time", "End time", "Duration"]];
-    for (let entry of tracker.entries)
+    for (let entry of orderedEntries(tracker.entries, settings))
         table.push(...createTableSection(entry, settings));
     table.push(["**Total**", "", "", `**${formatDuration(getTotalDuration(tracker.entries), settings)}**`]);
 
@@ -271,7 +271,7 @@ function createMarkdownTable(tracker: Tracker, settings: SimpleTimeTrackerSettin
 
 function createCsv(tracker: Tracker, settings: SimpleTimeTrackerSettings): string {
     let ret = "";
-    for (let entry of tracker.entries) {
+    for (let entry of orderedEntries(tracker.entries, settings)) {
         for (let row of createTableSection(entry, settings))
             ret += row.join(settings.csvDelimiter) + "\n";
     }
@@ -285,10 +285,14 @@ function createTableSection(entry: Entry, settings: SimpleTimeTrackerSettings): 
         entry.endTime ? formatTimestamp(entry.endTime, settings) : "",
         entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : ""]];
     if (entry.subEntries) {
-        for (let sub of entry.subEntries)
+        for (let sub of orderedEntries(entry.subEntries, settings))
             ret.push(...createTableSection(sub, settings));
     }
     return ret;
+}
+
+function orderedEntries(entries: Entry[], settings: SimpleTimeTrackerSettings): Entry[] {
+    return settings.reverseSegmentOrder ? entries.slice().reverse() : entries;
 }
 
 class EditableField {
@@ -408,7 +412,7 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
         });
 
     if (entry.subEntries) {
-        for (let sub of entry.subEntries)
+        for (let sub of orderedEntries(entry.subEntries, settings))
             addEditableTableRow(tracker, sub, table, newSegmentNameBox, running, file, getSectionInfo, settings, indent + 1);
     }
 }

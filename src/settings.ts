@@ -2,7 +2,8 @@ export const defaultSettings: SimpleTimeTrackerSettings = {
     timestampFormat: "YY-MM-DD HH:mm:ss",
     editableTimestampFormat: "YYYY-MM-DD HH:mm:ss",
     csvDelimiter: ",",
-    fineGrainedDurations: true
+    fineGrainedDurations: true,
+    reverseSegmentOrder: false
 };
 
 export interface SimpleTimeTrackerSettings {
@@ -11,5 +12,6 @@ export interface SimpleTimeTrackerSettings {
     editableTimestampFormat: string;
     csvDelimiter: string;
     fineGrainedDurations: boolean;
+    reverseSegmentOrder: boolean;
 
 }

@@ -1,6 +1,6 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import {App, PluginSettingTab, Setting} from "obsidian";
 import SimpleTimeTrackerPlugin from "./main";
-import { defaultSettings } from "./settings";
+import {defaultSettings} from "./settings";
 
 export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
 
@@ -48,6 +48,17 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
                 t.setValue(this.plugin.settings.fineGrainedDurations);
                 t.onChange(async v => {
                     this.plugin.settings.fineGrainedDurations = v;
+                    await this.plugin.saveSettings();
+                });
+            });
+
+        new Setting(this.containerEl)
+            .setName("Display Segments in Reverse Order")
+            .setDesc("Whether older tracker segments should be displayed towards the bottom of the tracker, rather than the top.")
+            .addToggle(t => {
+                t.setValue(this.plugin.settings.reverseSegmentOrder);
+                t.onChange(async v => {
+                    this.plugin.settings.reverseSegmentOrder = v;
                     await this.plugin.saveSettings();
                 });
             });

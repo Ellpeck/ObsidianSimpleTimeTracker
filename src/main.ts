@@ -1,7 +1,7 @@
 import { Plugin } from "obsidian";
 import { defaultSettings, SimpleTimeTrackerSettings } from "./settings";
 import { SimpleTimeTrackerSettingsTab } from "./settings-tab";
-import { displayTracker, loadTracker, Tracker } from "./tracker";
+import { displayTracker, loadTracker } from "./tracker";
 
 export default class SimpleTimeTrackerPlugin extends Plugin {
 
@@ -13,7 +13,7 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
         this.addSettingTab(new SimpleTimeTrackerSettingsTab(this.app, this));
 
         this.registerMarkdownCodeBlockProcessor("simple-time-tracker", (s, e, i) => {
-            let tracker: Tracker = loadTracker(s);
+            let tracker = loadTracker(s);
             e.empty();
             displayTracker(tracker, e, i.sourcePath, () => i.getSectionInfo(e), this.settings);
         });
