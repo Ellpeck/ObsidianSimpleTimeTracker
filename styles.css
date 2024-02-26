@@ -78,5 +78,5 @@
 }
 
 .simple-time-tracker-table tr:hover {
-    background-color: var(--background-secondary-alt);
+    background-color: var(--background-modifier-hover);
 }
