@@ -53,6 +53,17 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
             });
 
         new Setting(this.containerEl)
+            .setName("Timestamp Durations")
+            .setDesc("Whether durations should be displayed in a timestamp format (12:15:01) rather than the default duration format (12h 15m 1s).")
+            .addToggle(t => {
+                t.setValue(this.plugin.settings.timestampDurations);
+                t.onChange(async v => {
+                    this.plugin.settings.timestampDurations = v;
+                    await this.plugin.saveSettings();
+                });
+            });
+
+        new Setting(this.containerEl)
             .setName("Display Segments in Reverse Order")
             .setDesc("Whether older tracker segments should be displayed towards the bottom of the tracker, rather than the top.")
             .addToggle(t => {

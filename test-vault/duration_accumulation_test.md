@@ -6,5 +6,5 @@ More notes for my cool project! This note shows that we can correctly display ac
 ```
 
 ```simple-time-tracker
-{"entries":[{"name":"Segment 1","startTime":null,"endTime":null,"subEntries":[{"name":"Part 1","startTime":"2024-02-26T13:37:59.292Z","endTime":"2024-02-26T13:38:01.437Z","subEntries":null},{"name":"Part 2","startTime":"2024-02-26T13:38:16.235Z","endTime":"2024-02-26T13:38:18.895Z","subEntries":null}]}]}
+{"entries":[{"name":"Segment 1","startTime":null,"endTime":null,"subEntries":[{"name":"Part 1","startTime":null,"endTime":null,"subEntries":[{"name":"Part 1","startTime":"2024-02-26T13:37:59.292Z","endTime":"2024-02-26T13:38:01.437Z","subEntries":null},{"name":"Part 2","startTime":"2024-02-26T14:04:14.156Z","endTime":"2024-02-26T14:04:30.576Z","subEntries":null}]},{"name":"Part 2","startTime":"2024-02-26T13:38:16.235Z","endTime":"2024-02-26T13:38:18.895Z","subEntries":null}]}]}
 ```

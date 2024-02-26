@@ -215,23 +215,31 @@ function unformatEditableTimestamp(formatted: string, settings: SimpleTimeTracke
 function formatDuration(totalTime: number, settings: SimpleTimeTrackerSettings): string {
     let ret = "";
     let duration = moment.duration(totalTime);
-    let hours: number;
-    if (settings.fineGrainedDurations) {
-        if (duration.years() > 0)
-            ret += duration.years() + "y ";
-        if (duration.months() > 0)
-            ret += duration.months() + "M ";
-        if (duration.days() > 0)
-            ret += duration.days() + "d ";
-        hours = duration.hours();
+    let hours = settings.fineGrainedDurations ? duration.hours() : Math.floor(duration.asHours());
+
+    if (settings.timestampDurations) {
+        if (settings.fineGrainedDurations) {
+            let days = Math.floor(duration.asDays());
+            if (days > 0)
+                ret += days + ".";
+        }
+        ret += `${hours.toString().padStart(2, "0")}:${duration.minutes().toString().padStart(2, "0")}:${duration.seconds().toString().padStart(2, "0")}`;
     } else {
-        hours = Math.floor(duration.asHours());
+        if (settings.fineGrainedDurations) {
+            let years = Math.floor(duration.asYears());
+            if (years > 0)
+                ret += years + "y ";
+            if (duration.months() > 0)
+                ret += duration.months() + "M ";
+            if (duration.days() > 0)
+                ret += duration.days() + "d ";
+        }
+        if (hours > 0)
+            ret += hours + "h ";
+        if (duration.minutes() > 0)
+            ret += duration.minutes() + "m ";
+        ret += duration.seconds() + "s";
     }
-    if (hours > 0)
-        ret += hours + "h ";
-    if (duration.minutes() > 0)
-        ret += duration.minutes() + "m ";
-    ret += duration.seconds() + "s";
     return ret;
 }
 
