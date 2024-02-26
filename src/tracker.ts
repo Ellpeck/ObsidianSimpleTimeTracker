@@ -42,7 +42,7 @@ export function loadTracker(json: string): Tracker {
 }
 
 export function displayTracker(tracker: Tracker, element: HTMLElement, file: string, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings): void {
-    element.classList.add("simple-time-tracker-container");
+    element.addClass("simple-time-tracker-container");
     // add start/stop controls
     let running = isRunning(tracker);
     let btn = new ButtonComponent(element)
@@ -305,7 +305,7 @@ class EditableField {
         this.label = this.cell.createEl("span", {text: value});
         this.label.style.marginLeft = `${indent}em`;
         this.box = new TextComponent(this.cell).setValue(value);
-        this.box.inputEl.classList.add("simple-time-tracker-input");
+        this.box.inputEl.addClass("simple-time-tracker-input");
         this.box.inputEl.hide();
     }
 
@@ -373,6 +373,7 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
     row.createEl("td", {text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : ""});
 
     let entryButtons = row.createEl("td");
+    entryButtons.addClass("simple-time-tracker-table-buttons");
     new ButtonComponent(entryButtons)
         .setClass("clickable-icon")
         .setIcon(`lucide-play`)

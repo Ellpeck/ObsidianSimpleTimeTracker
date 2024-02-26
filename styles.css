@@ -71,3 +71,7 @@
     max-width: 150px;
     min-width: 100px;
 }
+
+.simple-time-tracker-table-buttons {
+    text-align: right !important;
+}
