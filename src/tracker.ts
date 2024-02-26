@@ -237,7 +237,7 @@ function formatDuration(totalTime: number, settings: SimpleTimeTrackerSettings):
 
 function fixLegacyTimestamps(entries: Entry[]): void {
     for (let entry of entries) {
-        if (!isNaN(+entry.startTime))
+        if (entry.startTime && !isNaN(+entry.startTime))
             entry.startTime = moment.unix(+entry.startTime).toISOString();
         if (entry.endTime && !isNaN(+entry.endTime))
             entry.endTime = moment.unix(+entry.endTime).toISOString();
@@ -362,7 +362,8 @@ class EditableTimestampField extends EditableField {
     }
 }
 
-function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, running: boolean, file: string, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number): void {
+function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, trackerRunning: boolean, file: string, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number): void {
+    let entryRunning = getRunningEntry(tracker.entries) == entry;
     let row = table.createEl("tr");
 
     let nameField = new EditableField(row, indent, entry.name);
@@ -372,20 +373,20 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
     row.createEl("td", {text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : ""});
 
     let entryButtons = row.createEl("td");
-    if (!running) {
-        new ButtonComponent(entryButtons)
-            .setClass("clickable-icon")
-            .setIcon(`lucide-play`)
-            .setTooltip("Continue")
-            .onClick(async () => {
-                startSubEntry(entry, newSegmentNameBox.getValue());
-                await saveTracker(tracker, this.app, file, getSectionInfo());
-            });
-    }
+    new ButtonComponent(entryButtons)
+        .setClass("clickable-icon")
+        .setIcon(`lucide-play`)
+        .setTooltip("Continue")
+        .setDisabled(trackerRunning)
+        .onClick(async () => {
+            startSubEntry(entry, newSegmentNameBox.getValue());
+            await saveTracker(tracker, this.app, file, getSectionInfo());
+        });
     let editButton = new ButtonComponent(entryButtons)
         .setClass("clickable-icon")
         .setTooltip("Edit")
         .setIcon("lucide-pencil")
+        .setDisabled(entryRunning)
         .onClick(async () => {
             if (nameField.editing()) {
                 entry.name = nameField.endEdit();
@@ -397,8 +398,11 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
                 editButton.setIcon("lucide-pencil");
             } else {
                 nameField.beginEdit(entry.name);
-                startField.beginEdit((entry.startTime));
-                endField.beginEdit((entry.endTime));
+                // only allow editing start and end times if we don't have sub entries
+                if (!entry.subEntries) {
+                    startField.beginEdit(entry.startTime);
+                    endField.beginEdit(entry.endTime);
+                }
                 editButton.setIcon("lucide-check");
             }
         });
@@ -406,6 +410,7 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
         .setClass("clickable-icon")
         .setTooltip("Remove")
         .setIcon("lucide-trash")
+        .setDisabled(entryRunning)
         .onClick(async () => {
             removeEntry(tracker.entries, entry);
             await saveTracker(tracker, this.app, file, getSectionInfo());
@@ -413,6 +418,6 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
 
     if (entry.subEntries) {
         for (let sub of orderedEntries(entry.subEntries, settings))
-            addEditableTableRow(tracker, sub, table, newSegmentNameBox, running, file, getSectionInfo, settings, indent + 1);
+            addEditableTableRow(tracker, sub, table, newSegmentNameBox, trackerRunning, file, getSectionInfo, settings, indent + 1);
     }
 }
