@@ -60,6 +60,7 @@
 
 .simple-time-tracker-table td,
 .simple-time-tracker-table th {
+    vertical-align: middle;
     border: none;
 }
 
@@ -74,4 +75,8 @@
 
 .simple-time-tracker-table-buttons {
     text-align: right !important;
+}
+
+.simple-time-tracker-table tr:hover {
+    background-color: var(--background-secondary-alt);
 }
