@@ -331,8 +331,8 @@ class EditableField {
 class EditableTimestampField extends EditableField {
     settings: SimpleTimeTrackerSettings;
 
-    constructor(row: HTMLTableRowElement, indent: number, value: string, settings: SimpleTimeTrackerSettings) {
-        super(row, indent, value ? formatTimestamp(value, settings) : "");
+    constructor(row: HTMLTableRowElement, value: string, settings: SimpleTimeTrackerSettings) {
+        super(row, 0, value ? formatTimestamp(value, settings) : "");
         this.settings = settings;
     }
 
@@ -367,8 +367,8 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
     let row = table.createEl("tr");
 
     let nameField = new EditableField(row, indent, entry.name);
-    let startField = new EditableTimestampField(row, indent, (entry.startTime), settings);
-    let endField = new EditableTimestampField(row, indent, (entry.endTime), settings);
+    let startField = new EditableTimestampField(row, (entry.startTime), settings);
+    let endField = new EditableTimestampField(row, (entry.endTime), settings);
 
     row.createEl("td", {text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : ""});
 
