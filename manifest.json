@@ -1,7 +1,7 @@
 {
     "id": "simple-time-tracker",
     "name": "Super Simple Time Tracker",
-    "version": "0.1.8",
+    "version": "0.2.0",
     "minAppVersion": "1.2.8",
     "description": "Multi-purpose time trackers for your notes!",
     "author": "Ellpeck",
