@@ -370,11 +370,58 @@ class EditableTimestampField extends EditableField {
     }
 }
 
+class EditableTagField extends EditableField {
+    constructor(row: HTMLTableRowElement, indent: number, value: string) {
+        super(row, indent, value);
+
+        const tagValue = this.getTag(value);
+        this.label.innerHTML = tagValue;
+    }
+
+    beginEdit(value: string): void {
+        super.beginEdit(value ? this.setTag(value) : "");
+    }
+
+    endEdit(): string {
+        const value = this.box.getValue();
+        let displayValue = value;
+        if (value) {
+            displayValue = this.getTag(value);
+        }
+        this.label.innerHTML = displayValue;
+        this.box.inputEl.hide();
+        this.label.hidden = false;
+        return value;
+    }
+
+    getTag(value: string): string {
+        const regex = /#(\S+)(?=\s|$)/;
+        const match = value.match(regex);
+        if (match) {
+            const tagName = match[0];
+            const tagHtml = `<a href="${tagName}" class="tag" target="_blank" rel="noopener" data-tag-name="${tagName}">${tagName}</a>`;
+            return value.replace(regex, tagHtml);
+        }
+        return value;
+    }
+
+    setTag(value: string): string {
+        const anchorRegex = /<a href="([^"]+)" class="tag" target="_blank" rel="noopener" data-tag-name="([^"]+)">([^<]+)<\/a>/;
+        const match = value.match(anchorRegex);
+        if (match) {
+            const tagName = match[2];
+            return value.replace(anchorRegex, tagName);
+        }
+        return value;
+    }
+}
+
 function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, trackerRunning: boolean, file: string, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number): void {
     let entryRunning = getRunningEntry(tracker.entries) == entry;
     let row = table.createEl("tr");
 
-    let nameField = new EditableField(row, indent, entry.name);
+    //let nameField = new EditableField(row, indent, entry.name);
+    let nameField = new EditableTagField(row, indent, entry.name);
     let startField = new EditableTimestampField(row, (entry.startTime), settings);
     let endField = new EditableTimestampField(row, (entry.endTime), settings);
 
