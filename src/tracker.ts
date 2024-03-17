@@ -1,4 +1,4 @@
-import {moment, App, MarkdownSectionInformation, ButtonComponent, TextComponent, TFile} from "obsidian";
+import {moment, App, MarkdownSectionInformation, ButtonComponent, TextComponent, TFile, MarkdownRenderer} from "obsidian";
 import {SimpleTimeTrackerSettings} from "./settings";
 
 export interface Tracker {
@@ -370,62 +370,27 @@ class EditableTimestampField extends EditableField {
     }
 }
 
-class EditableTagField extends EditableField {
-    constructor(row: HTMLTableRowElement, indent: number, value: string) {
-        super(row, indent, value);
-
-        const tagValue = this.getTag(value);
-        this.label.innerHTML = tagValue;
-    }
-
-    beginEdit(value: string): void {
-        super.beginEdit(value ? this.setTag(value) : "");
-    }
-
-    endEdit(): string {
-        const value = this.box.getValue();
-        let displayValue = value;
-        if (value) {
-            displayValue = this.getTag(value);
-        }
-        this.label.innerHTML = displayValue;
-        this.box.inputEl.hide();
-        this.label.hidden = false;
-        return value;
-    }
-
-    getTag(value: string): string {
-        const regex = /#(\S+)(?=\s|$)/;
-        const match = value.match(regex);
-        if (match) {
-            const tagName = match[0];
-            const tagHtml = `<a href="${tagName}" class="tag" target="_blank" rel="noopener" data-tag-name="${tagName}">${tagName}</a>`;
-            return value.replace(regex, tagHtml);
-        }
-        return value;
-    }
-
-    setTag(value: string): string {
-        const anchorRegex = /<a href="([^"]+)" class="tag" target="_blank" rel="noopener" data-tag-name="([^"]+)">([^<]+)<\/a>/;
-        const match = value.match(anchorRegex);
-        if (match) {
-            const tagName = match[2];
-            return value.replace(anchorRegex, tagName);
-        }
-        return value;
-    }
-}
-
-function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, trackerRunning: boolean, file: string, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number): void {
+function addEditableTableRow(
+    tracker: Tracker,
+    entry: Entry,
+    table: HTMLTableElement,
+    newSegmentNameBox: TextComponent,
+    trackerRunning: boolean,
+    file: string,
+    getSectionInfo: () => MarkdownSectionInformation,
+    settings: SimpleTimeTrackerSettings,
+    indent: number
+): void {
     let entryRunning = getRunningEntry(tracker.entries) == entry;
     let row = table.createEl("tr");
 
-    //let nameField = new EditableField(row, indent, entry.name);
-    let nameField = new EditableTagField(row, indent, entry.name);
-    let startField = new EditableTimestampField(row, (entry.startTime), settings);
-    let endField = new EditableTimestampField(row, (entry.endTime), settings);
+    let nameField = new EditableField(row, indent, entry.name);
+    let startField = new EditableTimestampField(row, entry.startTime, settings);
+    let endField = new EditableTimestampField(row, entry.endTime, settings);
 
-    row.createEl("td", {text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : ""});
+    row.createEl("td", { text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : "" });
+
+    renderSegments(row, file);
 
     let entryButtons = row.createEl("td");
     entryButtons.addClass("simple-time-tracker-table-buttons");
@@ -452,6 +417,8 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
                 entry.endTime = endField.getTimestamp();
                 await saveTracker(tracker, this.app, file, getSectionInfo());
                 editButton.setIcon("lucide-pencil");
+                
+                renderSegments(row, file);
             } else {
                 nameField.beginEdit(entry.name);
                 // only allow editing start and end times if we don't have sub entries
@@ -473,7 +440,24 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
         });
 
     if (entry.subEntries) {
-        for (let sub of orderedEntries(entry.subEntries, settings))
-            addEditableTableRow(tracker, sub, table, newSegmentNameBox, trackerRunning, file, getSectionInfo, settings, indent + 1);
+        for (let sub of orderedEntries(entry.subEntries, settings)) addEditableTableRow(tracker, sub, table, newSegmentNameBox, trackerRunning, file, getSectionInfo, settings, indent + 1);
+    }
+}
+
+/**
+ * Render Segment as Markdown
+ * @param row - Html row in table
+ * @param path - Path to file with time tracker
+ */
+function renderSegments(row: any, path: string) {
+    // Get coluumn with Segment
+    const segment = row.querySelector("td:first-child span");
+    if (segment) {
+        const htmlData = segment.innerHTML;
+        // Render Markdown
+        // Result `<p>_rendered_html_</p>`
+        MarkdownRenderer.renderMarkdown(htmlData, segment as HTMLElement, path, this);
+        // Replace current segment by rendered version
+        segment.innerHTML = segment.querySelector("p").innerHTML;
     }
 }
