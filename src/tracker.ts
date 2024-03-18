@@ -1,4 +1,4 @@
-import {moment, App, MarkdownSectionInformation, ButtonComponent, TextComponent, TFile} from "obsidian";
+import {moment, App, MarkdownSectionInformation, ButtonComponent, TextComponent, TFile, MarkdownRenderer} from "obsidian";
 import {SimpleTimeTrackerSettings} from "./settings";
 
 export interface Tracker {
@@ -380,6 +380,8 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
 
     row.createEl("td", {text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : ""});
 
+    renderSegments(row, file);
+
     let entryButtons = row.createEl("td");
     entryButtons.addClass("simple-time-tracker-table-buttons");
     new ButtonComponent(entryButtons)
@@ -405,6 +407,8 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
                 entry.endTime = endField.getTimestamp();
                 await saveTracker(tracker, this.app, file, getSectionInfo());
                 editButton.setIcon("lucide-pencil");
+                
+                renderSegments(row, file);
             } else {
                 nameField.beginEdit(entry.name);
                 // only allow editing start and end times if we don't have sub entries
@@ -428,5 +432,23 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
     if (entry.subEntries) {
         for (let sub of orderedEntries(entry.subEntries, settings))
             addEditableTableRow(tracker, sub, table, newSegmentNameBox, trackerRunning, file, getSectionInfo, settings, indent + 1);
+    }
+}
+
+/**
+ * Render Segment as Markdown
+ * @param row - Html row in table
+ * @param path - Path to file with time tracker
+ */
+function renderSegments(row: any, path: string) {
+    // Get coluumn with Segment
+    const segment = row.querySelector("td:first-child span");
+    if (segment) {
+        const htmlData = segment.innerHTML;
+        // Render Markdown
+        // Result `<p>_rendered_html_</p>`
+        MarkdownRenderer.renderMarkdown(htmlData, segment as HTMLElement, path, this);
+        // Replace current segment by rendered version
+        segment.innerHTML = segment.querySelector("p").innerHTML;
     }
 }
