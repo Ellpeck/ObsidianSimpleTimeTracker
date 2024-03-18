@@ -370,25 +370,15 @@ class EditableTimestampField extends EditableField {
     }
 }
 
-function addEditableTableRow(
-    tracker: Tracker,
-    entry: Entry,
-    table: HTMLTableElement,
-    newSegmentNameBox: TextComponent,
-    trackerRunning: boolean,
-    file: string,
-    getSectionInfo: () => MarkdownSectionInformation,
-    settings: SimpleTimeTrackerSettings,
-    indent: number
-): void {
+function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, trackerRunning: boolean, file: string, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number): void {
     let entryRunning = getRunningEntry(tracker.entries) == entry;
     let row = table.createEl("tr");
 
     let nameField = new EditableField(row, indent, entry.name);
-    let startField = new EditableTimestampField(row, entry.startTime, settings);
-    let endField = new EditableTimestampField(row, entry.endTime, settings);
+    let startField = new EditableTimestampField(row, (entry.startTime), settings);
+    let endField = new EditableTimestampField(row, (entry.endTime), settings);
 
-    row.createEl("td", { text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : "" });
+    row.createEl("td", {text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : ""});
 
     renderSegments(row, file);
 
@@ -440,7 +430,8 @@ function addEditableTableRow(
         });
 
     if (entry.subEntries) {
-        for (let sub of orderedEntries(entry.subEntries, settings)) addEditableTableRow(tracker, sub, table, newSegmentNameBox, trackerRunning, file, getSectionInfo, settings, indent + 1);
+        for (let sub of orderedEntries(entry.subEntries, settings))
+            addEditableTableRow(tracker, sub, table, newSegmentNameBox, trackerRunning, file, getSectionInfo, settings, indent + 1);
     }
 }
 
