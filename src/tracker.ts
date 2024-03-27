@@ -330,14 +330,15 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
         .setClass("clickable-icon")
         .setTooltip("Edit")
         .setIcon("lucide-pencil")
-        .setDisabled(entryRunning)
         .onClick(async () => {
             if (nameField.editing()) {
                 entry.name = nameField.endEdit();
                 startField.endEdit();
                 entry.startTime = startField.getTimestamp();
-                endField.endEdit();
-                entry.endTime = endField.getTimestamp();
+                if (!entryRunning) {
+                    endField.endEdit();
+                    entry.endTime = endField.getTimestamp();
+                }
                 await saveTracker(tracker, this.app, file, getSectionInfo());
                 editButton.setIcon("lucide-pencil");
 
@@ -347,7 +348,8 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
                 // only allow editing start and end times if we don't have sub entries
                 if (!entry.subEntries) {
                     startField.beginEdit(entry.startTime);
-                    endField.beginEdit(entry.endTime);
+                    if (!entryRunning)
+                        endField.beginEdit(entry.endTime);
                 }
                 editButton.setIcon("lucide-check");
             }
