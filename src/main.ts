@@ -1,4 +1,4 @@
-import { Plugin } from "obsidian";
+import {MarkdownRenderChild, Plugin} from "obsidian";
 import { defaultSettings, SimpleTimeTrackerSettings } from "./settings";
 import { SimpleTimeTrackerSettingsTab } from "./settings-tab";
 import { displayTracker, loadTracker } from "./tracker";
@@ -13,9 +13,11 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
         this.addSettingTab(new SimpleTimeTrackerSettingsTab(this.app, this));
 
         this.registerMarkdownCodeBlockProcessor("simple-time-tracker", (s, e, i) => {
-            let tracker = loadTracker(s);
             e.empty();
-            displayTracker(tracker, e, i.sourcePath, () => i.getSectionInfo(e), this.settings);
+            let component = new MarkdownRenderChild(e)
+            let tracker = loadTracker(s);
+            displayTracker(tracker, e, i.sourcePath, () => i.getSectionInfo(e), this.settings, component);
+            i.addChild(component)
         });
 
         this.addCommand({

@@ -1,4 +1,4 @@
-import {moment, App, MarkdownSectionInformation, ButtonComponent, TextComponent, TFile, MarkdownRenderer} from "obsidian";
+import {moment, App, MarkdownSectionInformation, ButtonComponent, TextComponent, TFile, MarkdownRenderer, Component, MarkdownRenderChild} from "obsidian";
 import {SimpleTimeTrackerSettings} from "./settings";
 
 export interface Tracker {
@@ -41,7 +41,7 @@ export function loadTracker(json: string): Tracker {
     return {entries: []};
 }
 
-export function displayTracker(tracker: Tracker, element: HTMLElement, file: string, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings): void {
+export function displayTracker(tracker: Tracker, element: HTMLElement, file: string, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, component: MarkdownRenderChild): void {
     element.addClass("simple-time-tracker-container");
     // add start/stop controls
     let running = isRunning(tracker);
@@ -83,7 +83,7 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, file: str
             createEl("th"));
 
         for (let entry of orderedEntries(tracker.entries, settings))
-            addEditableTableRow(tracker, entry, table, newSegmentNameBox, running, file, getSectionInfo, settings, 0);
+            addEditableTableRow(tracker, entry, table, newSegmentNameBox, running, file, getSectionInfo, settings, 0, component);
 
         // add copy buttons
         let buttons = element.createEl("div", {cls: "simple-time-tracker-bottom"});
@@ -303,6 +303,78 @@ function orderedEntries(entries: Entry[], settings: SimpleTimeTrackerSettings): 
     return settings.reverseSegmentOrder ? entries.slice().reverse() : entries;
 }
 
+function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, trackerRunning: boolean, file: string, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number, component: MarkdownRenderChild): void {
+    let entryRunning = getRunningEntry(tracker.entries) == entry;
+    let row = table.createEl("tr");
+
+    let nameField = new EditableField(row, indent, entry.name);
+    let startField = new EditableTimestampField(row, (entry.startTime), settings);
+    let endField = new EditableTimestampField(row, (entry.endTime), settings);
+
+    row.createEl("td", {text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : ""});
+
+    renderNameAsMarkdown(nameField.label, file, component);
+
+    let entryButtons = row.createEl("td");
+    entryButtons.addClass("simple-time-tracker-table-buttons");
+    new ButtonComponent(entryButtons)
+        .setClass("clickable-icon")
+        .setIcon(`lucide-play`)
+        .setTooltip("Continue")
+        .setDisabled(trackerRunning)
+        .onClick(async () => {
+            startSubEntry(entry, newSegmentNameBox.getValue());
+            await saveTracker(tracker, this.app, file, getSectionInfo());
+        });
+    let editButton = new ButtonComponent(entryButtons)
+        .setClass("clickable-icon")
+        .setTooltip("Edit")
+        .setIcon("lucide-pencil")
+        .setDisabled(entryRunning)
+        .onClick(async () => {
+            if (nameField.editing()) {
+                entry.name = nameField.endEdit();
+                startField.endEdit();
+                entry.startTime = startField.getTimestamp();
+                endField.endEdit();
+                entry.endTime = endField.getTimestamp();
+                await saveTracker(tracker, this.app, file, getSectionInfo());
+                editButton.setIcon("lucide-pencil");
+
+                renderNameAsMarkdown(nameField.label, file, component);
+            } else {
+                nameField.beginEdit(entry.name);
+                // only allow editing start and end times if we don't have sub entries
+                if (!entry.subEntries) {
+                    startField.beginEdit(entry.startTime);
+                    endField.beginEdit(entry.endTime);
+                }
+                editButton.setIcon("lucide-check");
+            }
+        });
+    new ButtonComponent(entryButtons)
+        .setClass("clickable-icon")
+        .setTooltip("Remove")
+        .setIcon("lucide-trash")
+        .setDisabled(entryRunning)
+        .onClick(async () => {
+            removeEntry(tracker.entries, entry);
+            await saveTracker(tracker, this.app, file, getSectionInfo());
+        });
+
+    if (entry.subEntries) {
+        for (let sub of orderedEntries(entry.subEntries, settings))
+            addEditableTableRow(tracker, sub, table, newSegmentNameBox, trackerRunning, file, getSectionInfo, settings, indent + 1, component);
+    }
+}
+
+function renderNameAsMarkdown(label: HTMLSpanElement, path: string, component: Component): void {
+    void MarkdownRenderer.renderMarkdown(label.innerHTML, label, path, component);
+    // rendering wraps it in a paragraph
+    label.innerHTML = label.querySelector("p").innerHTML;
+}
+
+
 class EditableField {
     cell: HTMLTableCellElement;
     label: HTMLSpanElement;
@@ -367,88 +439,5 @@ class EditableTimestampField extends EditableField {
         } else {
             return null;
         }
-    }
-}
-
-function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, trackerRunning: boolean, file: string, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number): void {
-    let entryRunning = getRunningEntry(tracker.entries) == entry;
-    let row = table.createEl("tr");
-
-    let nameField = new EditableField(row, indent, entry.name);
-    let startField = new EditableTimestampField(row, (entry.startTime), settings);
-    let endField = new EditableTimestampField(row, (entry.endTime), settings);
-
-    row.createEl("td", {text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : ""});
-
-    renderSegments(row, file);
-
-    let entryButtons = row.createEl("td");
-    entryButtons.addClass("simple-time-tracker-table-buttons");
-    new ButtonComponent(entryButtons)
-        .setClass("clickable-icon")
-        .setIcon(`lucide-play`)
-        .setTooltip("Continue")
-        .setDisabled(trackerRunning)
-        .onClick(async () => {
-            startSubEntry(entry, newSegmentNameBox.getValue());
-            await saveTracker(tracker, this.app, file, getSectionInfo());
-        });
-    let editButton = new ButtonComponent(entryButtons)
-        .setClass("clickable-icon")
-        .setTooltip("Edit")
-        .setIcon("lucide-pencil")
-        .setDisabled(entryRunning)
-        .onClick(async () => {
-            if (nameField.editing()) {
-                entry.name = nameField.endEdit();
-                startField.endEdit();
-                entry.startTime = startField.getTimestamp();
-                endField.endEdit();
-                entry.endTime = endField.getTimestamp();
-                await saveTracker(tracker, this.app, file, getSectionInfo());
-                editButton.setIcon("lucide-pencil");
-                
-                renderSegments(row, file);
-            } else {
-                nameField.beginEdit(entry.name);
-                // only allow editing start and end times if we don't have sub entries
-                if (!entry.subEntries) {
-                    startField.beginEdit(entry.startTime);
-                    endField.beginEdit(entry.endTime);
-                }
-                editButton.setIcon("lucide-check");
-            }
-        });
-    new ButtonComponent(entryButtons)
-        .setClass("clickable-icon")
-        .setTooltip("Remove")
-        .setIcon("lucide-trash")
-        .setDisabled(entryRunning)
-        .onClick(async () => {
-            removeEntry(tracker.entries, entry);
-            await saveTracker(tracker, this.app, file, getSectionInfo());
-        });
-
-    if (entry.subEntries) {
-        for (let sub of orderedEntries(entry.subEntries, settings))
-            addEditableTableRow(tracker, sub, table, newSegmentNameBox, trackerRunning, file, getSectionInfo, settings, indent + 1);
-    }
-}
-
-/**
- * Render Segment as Markdown
- * @param row - Html row in table
- * @param path - Path to file with time tracker
- */
-function renderSegments(row: any, path: string) {
-    // Get coluumn with Segment
-    const segment = row.querySelector("td:first-child span");
-    if (segment) {
-        const htmlData = segment.innerHTML;
-        // Render Markdown
-        // Result `<p>_rendered_html_</p>`
-        MarkdownRenderer.renderMarkdown(htmlData, segment as HTMLElement, path, this);
-        // Replace current segment by rendered version
-        segment.innerHTML = segment.querySelector("p").innerHTML;
     }
 }
