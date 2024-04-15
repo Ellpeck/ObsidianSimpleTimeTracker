@@ -1,4 +1,4 @@
-import {MarkdownRenderChild, Plugin} from "obsidian";
+import {MarkdownRenderChild, Plugin, TFile} from "obsidian";
 import { defaultSettings, SimpleTimeTrackerSettings } from "./settings";
 import { SimpleTimeTrackerSettingsTab } from "./settings-tab";
 import { displayTracker, loadTracker } from "./tracker";
@@ -16,7 +16,24 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
             e.empty();
             let component = new MarkdownRenderChild(e)
             let tracker = loadTracker(s);
-            displayTracker(tracker, e, i.sourcePath, () => i.getSectionInfo(e), this.settings, component);
+
+            // Initial file name
+            let filePath = i.sourcePath;
+
+            // Getter passed to displayTracker since the file name can change
+            const getFile = () => filePath;
+
+            // Hook rename events to update the file path
+            const renameEventRef = this.app.vault.on("rename", (file, oldPath) => {
+                if (file instanceof TFile && oldPath === filePath) {
+                    filePath = file.path;
+                }
+            })
+
+            // Register the event to remove on unload
+            component.registerEvent(renameEventRef);
+
+            displayTracker(tracker, e, getFile, () => i.getSectionInfo(e), this.settings, component);
             i.addChild(component)
         });
 
