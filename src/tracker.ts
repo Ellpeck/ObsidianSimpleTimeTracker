@@ -363,6 +363,9 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
         .setIcon("lucide-trash")
         .setDisabled(entryRunning)
         .onClick(async () => {
+            if (!confirm("Are you sure you want to delete this entry?")) {
+                return;
+            }
             removeEntry(tracker.entries, entry);
             await saveTracker(tracker, this.app, getFile(), getSectionInfo());
         });
