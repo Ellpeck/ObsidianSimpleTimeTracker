@@ -8,6 +8,10 @@ To get started tracking your time with Super Simple Time Tracker, open up the no
 
 When switching to live preview or reading mode, you will now see the time tracker you just inserted! Now, simply name the first segment (or leave the box empty if you don't want to name it) and press the **Start** button. Once you're done with the thing you were doing, simply press the **End** button and the time you spent will be saved and displayed to you in the table.
 
+Need help using the plugin? Feel free to join the Discord server!
+
+[![Join the Discord server](https://ellpeck.de/res/discord-wide.png)](https://link.ellpeck.de/discordweb)
+
 # 👀 What it does
 A time tracker is really just a special code block that stores information about the times you pressed the Start and End buttons on. Since time is tracked solely through timestamps, you can switch notes, close Obsidian or even shut down your device completely while the tracker is running! Once you come back, your time tracker will still be running.
 
@@ -20,4 +24,4 @@ Super Simple Time Tracker is still in its early stages! There are a lot of plans
 # 🙏 Acknowledgements
 If you like this plugin and want to support its development, you can do so through my website by clicking this fancy image!
 
-[![Support me (if you want), via Patreon, Ko-fi or GitHub Sponsors](https://ellpeck.de/res/generalsupport.png)](https://ellpeck.de/support)
+[![Support me (if you want), via Patreon, Ko-fi or GitHub Sponsors](https://ellpeck.de/res/generalsupport-wide.png)](https://ellpeck.de/support)
