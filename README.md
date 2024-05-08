@@ -17,10 +17,6 @@ A time tracker is really just a special code block that stores information about
 
 The tracker's information is stored in the code block as JSON data. The names, start times and end times of each segment are stored. They're displayed neatly in the code block in preview or reading mode.
 
-# 🛣️ Roadmap
-Super Simple Time Tracker is still in its early stages! There are a lot of plans for it, including:
-- A setting to link segments to corresponding daily notes automatically
-
 # 🙏 Acknowledgements
 If you like this plugin and want to support its development, you can do so through my website by clicking this fancy image!
 
