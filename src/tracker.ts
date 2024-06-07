@@ -324,7 +324,7 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
             .setClass("clickable-icon")
             .setClass("simple-time-tracker-expand-button")
             .setIcon(`chevron-${entry.collapsed ? 'right' : 'down'}`)
-            .setTooltip("Collapse")
+            .setTooltip(entry.collapsed ? "Expand" : "Collapse")
             .onClick(async () => {
                 if (entry.collapsed) {
                     delete entry.collapsed;
