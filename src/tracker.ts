@@ -357,9 +357,7 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
         .onClick(async () => {
             if (nameField.editing()) {
                 entry.name = nameField.endEdit();
-                if (entry.subEntries?.length) {
-                    expandButton.buttonEl.style.display = null;
-                }
+                expandButton.buttonEl.style.display = null;
                 startField.endEdit();
                 entry.startTime = startField.getTimestamp();
                 if (!entryRunning) {
@@ -372,9 +370,7 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
                 renderNameAsMarkdown(nameField.label, getFile, component);
             } else {
                 nameField.beginEdit(entry.name);
-                if (entry.subEntries?.length) {
-                    expandButton.buttonEl.style.display = 'none';
-                }
+                expandButton.buttonEl.style.display = 'none';
                 // only allow editing start and end times if we don't have sub entries
                 if (!entry.subEntries) {
                     startField.beginEdit(entry.startTime);
