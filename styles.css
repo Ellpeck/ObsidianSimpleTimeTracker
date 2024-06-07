@@ -79,20 +79,3 @@
 .simple-time-tracker-table tr:hover {
     background-color: var(--background-modifier-hover);
 }
-
-.simple-time-tracker-table :is(td,th):first-child {
-    /* HACKY hardcoded 2em to make room for expand/collapse button */
-    padding-left: 2em;
-}
-
-.simple-time-tracker-table-expandwrapper {
-    position: relative;
-}
-
-.simple-time-tracker-expand-button {
-    position: absolute;
-    /* HACKY there should be a better way to position this */
-    left: 0;
-    top: 50%;
-    transform: translate(-100%, -50%);
-}

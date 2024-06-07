@@ -319,26 +319,25 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
 
     renderNameAsMarkdown(nameField.label, getFile, component);
 
-    if (entry.subEntries?.length) {
-        let expandButton = new ButtonComponent(nameField.label)
-            .setClass("clickable-icon")
-            .setClass("simple-time-tracker-expand-button")
-            .setIcon(`chevron-${entry.collapsed ? 'right' : 'down'}`)
-            .setTooltip(entry.collapsed ? "Expand" : "Collapse")
-            .onClick(async () => {
-                if (entry.collapsed) {
-                    delete entry.collapsed;
-                } else {
-                    entry.collapsed = 1;
-                }
-                await saveTracker(tracker, this.app, getFile(), getSectionInfo());
-            });
-        let nameWrapper = nameField.cell.createDiv({cls: "simple-time-tracker-table-expandwrapper"});
-        nameWrapper.style.marginLeft = nameField.label.style.marginLeft;
-        nameField.label.style.marginLeft = null;
-        nameWrapper.insertBefore(nameField.label, null);
-        nameWrapper.insertBefore(expandButton.buttonEl, null);
-    }
+    let expandButton = new ButtonComponent(nameField.label)
+        .setClass("clickable-icon")
+        .setClass("simple-time-tracker-expand-button")
+        .setIcon(`chevron-${entry.collapsed ? 'right' : 'down'}`)
+        .setTooltip(entry.collapsed ? "Expand" : "Collapse")
+        .onClick(async () => {
+            if (entry.collapsed) {
+                delete entry.collapsed;
+            } else {
+                entry.collapsed = 1;
+            }
+            await saveTracker(tracker, this.app, getFile(), getSectionInfo());
+        });
+    if (!entry.subEntries?.length) expandButton.buttonEl.style.visibility = 'hidden';
+    let nameWrapper = nameField.cell.createDiv({cls: "simple-time-tracker-table-expandwrapper"});
+    nameWrapper.style.marginLeft = nameField.label.style.marginLeft;
+    nameField.label.style.marginLeft = null;
+    nameWrapper.insertBefore(expandButton.buttonEl, null);
+    nameWrapper.insertBefore(nameField.label, null);
 
     let entryButtons = row.createEl("td");
     entryButtons.addClass("simple-time-tracker-table-buttons");
@@ -358,6 +357,9 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
         .onClick(async () => {
             if (nameField.editing()) {
                 entry.name = nameField.endEdit();
+                if (entry.subEntries?.length) {
+                    expandButton.buttonEl.style.display = null;
+                }
                 startField.endEdit();
                 entry.startTime = startField.getTimestamp();
                 if (!entryRunning) {
@@ -370,6 +372,9 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
                 renderNameAsMarkdown(nameField.label, getFile, component);
             } else {
                 nameField.beginEdit(entry.name);
+                if (entry.subEntries?.length) {
+                    expandButton.buttonEl.style.display = 'none';
+                }
                 // only allow editing start and end times if we don't have sub entries
                 if (!entry.subEntries) {
                     startField.beginEdit(entry.startTime);
