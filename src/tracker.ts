@@ -1,5 +1,6 @@
 import {moment, App, MarkdownSectionInformation, ButtonComponent, TextComponent, TFile, MarkdownRenderer, Component, MarkdownRenderChild} from "obsidian";
 import {SimpleTimeTrackerSettings} from "./settings";
+import { ConfirmModal } from "./confirm-modal";
 
 export interface Tracker {
     entries: Entry[];
@@ -43,7 +44,7 @@ export function loadTracker(json: string): Tracker {
 
 type GetFile = () => string;
 
-export function displayTracker(tracker: Tracker, element: HTMLElement, getFile: GetFile, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, component: MarkdownRenderChild): void {
+export function displayTracker(app: App, tracker: Tracker, element: HTMLElement, getFile: GetFile, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, component: MarkdownRenderChild): void {
    
     element.addClass("simple-time-tracker-container");
     // add start/stop controls
@@ -86,7 +87,7 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getFile: 
             createEl("th"));
 
         for (let entry of orderedEntries(tracker.entries, settings))
-            addEditableTableRow(tracker, entry, table, newSegmentNameBox, running, getFile, getSectionInfo, settings, 0, component);
+            addEditableTableRow(app, tracker, entry, table, newSegmentNameBox, running, getFile, getSectionInfo, settings, 0, component);
 
         // add copy buttons
         let buttons = element.createEl("div", {cls: "simple-time-tracker-bottom"});
@@ -306,7 +307,7 @@ function orderedEntries(entries: Entry[], settings: SimpleTimeTrackerSettings): 
     return settings.reverseSegmentOrder ? entries.slice().reverse() : entries;
 }
 
-function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, trackerRunning: boolean, getFile: GetFile, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number, component: MarkdownRenderChild): void {
+function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, trackerRunning: boolean, getFile: GetFile, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number, component: MarkdownRenderChild): void {
     let entryRunning = getRunningEntry(tracker.entries) == entry;
     let row = table.createEl("tr");
 
@@ -363,17 +364,28 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
         .setIcon("lucide-trash")
         .setDisabled(entryRunning)
         .onClick(async () => {
-            if (!confirm("Are you sure you want to delete this entry?")) {
+
+            const confirmed = await showConfirm(app, "Are you sure you want to delete this entry?")
+            
+            if (!confirmed) {
                 return;
             }
+            
             removeEntry(tracker.entries, entry);
             await saveTracker(tracker, this.app, getFile(), getSectionInfo());
         });
 
     if (entry.subEntries) {
         for (let sub of orderedEntries(entry.subEntries, settings))
-            addEditableTableRow(tracker, sub, table, newSegmentNameBox, trackerRunning, getFile, getSectionInfo, settings, indent + 1, component);
+            addEditableTableRow(app, tracker, sub, table, newSegmentNameBox, trackerRunning, getFile, getSectionInfo, settings, indent + 1, component);
     }
+}
+
+ function showConfirm(app: App, message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+        const modal = new ConfirmModal(app, message, resolve);
+        modal.open();
+    });
 }
 
 function renderNameAsMarkdown(label: HTMLSpanElement, getFile: GetFile, component: Component): void {

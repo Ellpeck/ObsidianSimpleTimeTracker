@@ -33,7 +33,7 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
             // Register the event to remove on unload
             component.registerEvent(renameEventRef);
 
-            displayTracker(tracker, e, getFile, () => i.getSectionInfo(e), this.settings, component);
+            displayTracker(this.app, tracker, e, getFile, () => i.getSectionInfo(e), this.settings, component);
             i.addChild(component)
         });
 
