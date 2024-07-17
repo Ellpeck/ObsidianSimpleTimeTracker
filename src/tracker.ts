@@ -10,7 +10,7 @@ export interface Entry {
     startTime: string;
     endTime: string;
     subEntries: Entry[];
-    collapsed?: number;
+    collapsed?: boolean;
 }
 
 export async function saveTracker(tracker: Tracker, app: App, fileName: string, section: MarkdownSectionInformation): Promise<void> {
@@ -328,7 +328,7 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
             if (entry.collapsed) {
                 delete entry.collapsed;
             } else {
-                entry.collapsed = 1;
+                entry.collapsed = true;
             }
             await saveTracker(tracker, this.app, getFile(), getSectionInfo());
         });
