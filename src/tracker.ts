@@ -333,11 +333,7 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
             await saveTracker(tracker, this.app, getFile(), getSectionInfo());
         });
     if (!entry.subEntries?.length) expandButton.buttonEl.style.visibility = 'hidden';
-    let nameWrapper = nameField.cell.createDiv({cls: "simple-time-tracker-table-expandwrapper"});
-    nameWrapper.style.marginLeft = nameField.label.style.marginLeft;
-    nameField.label.style.marginLeft = null;
-    nameWrapper.insertBefore(expandButton.buttonEl, null);
-    nameWrapper.insertBefore(nameField.label, null);
+    nameField.cell.insertBefore(expandButton.buttonEl, nameField.label);
 
     let entryButtons = row.createEl("td");
     entryButtons.addClass("simple-time-tracker-table-buttons");
