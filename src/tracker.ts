@@ -69,7 +69,7 @@ export async function loadAllTrackers(fileName: string): Promise<{ section: Mark
 
 type GetFile = () => string;
 
-export async function displayTracker(tracker: Tracker, element: HTMLElement, getFile: GetFile, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, component: MarkdownRenderChild): Promise<void> {
+export function displayTracker(tracker: Tracker, element: HTMLElement, getFile: GetFile, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, component: MarkdownRenderChild): void {
 
     element.addClass("simple-time-tracker-container");
     // add start/stop controls
@@ -112,7 +112,7 @@ export async function displayTracker(tracker: Tracker, element: HTMLElement, get
             createEl("th"));
 
         for (let entry of orderedEntries(tracker.entries, settings))
-            await addEditableTableRow(tracker, entry, table, newSegmentNameBox, running, getFile, getSectionInfo, settings, 0, component);
+            addEditableTableRow(tracker, entry, table, newSegmentNameBox, running, getFile, getSectionInfo, settings, 0, component);
 
         // add copy buttons
         let buttons = element.createEl("div", { cls: "simple-time-tracker-bottom" });
@@ -339,7 +339,7 @@ function createTableSection(entry: Entry, settings: SimpleTimeTrackerSettings): 
     return ret;
 }
 
-async function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, trackerRunning: boolean, getFile: GetFile, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number, component: MarkdownRenderChild): Promise<void> {
+function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, trackerRunning: boolean, getFile: GetFile, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number, component: MarkdownRenderChild): void {
     let entryRunning = getRunningEntry(tracker.entries) == entry;
     let row = table.createEl("tr");
 
@@ -349,7 +349,7 @@ async function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTa
 
     row.createEl("td", { text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : "" });
 
-    await renderNameAsMarkdown(nameField.label, getFile, component);
+    void renderNameAsMarkdown(nameField.label, getFile, component);
 
     let expandButton = new ButtonComponent(nameField.label)
         .setClass("clickable-icon")
@@ -394,7 +394,7 @@ async function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTa
                 await saveTracker(tracker, getFile(), getSectionInfo());
                 editButton.setIcon("lucide-pencil");
 
-                await renderNameAsMarkdown(nameField.label, getFile, component);
+                void renderNameAsMarkdown(nameField.label, getFile, component);
             } else {
                 nameField.beginEdit(entry.name);
                 expandButton.buttonEl.style.display = "none";
@@ -426,7 +426,7 @@ async function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTa
 
     if (entry.subEntries && !entry.collapsed) {
         for (let sub of orderedEntries(entry.subEntries, settings))
-            await addEditableTableRow(tracker, sub, table, newSegmentNameBox, trackerRunning, getFile, getSectionInfo, settings, indent + 1, component);
+            addEditableTableRow(tracker, sub, table, newSegmentNameBox, trackerRunning, getFile, getSectionInfo, settings, indent + 1, component);
     }
 }
 
@@ -437,10 +437,11 @@ function showConfirm(message: string): Promise<boolean> {
     });
 }
 
-async function renderNameAsMarkdown(label: HTMLSpanElement, getFile: GetFile, component: Component): Promise<void> {
-    await MarkdownRenderer.renderMarkdown(label.innerHTML, label, getFile(), component);
-    // rendering wraps it in a paragraph
-    label.innerHTML = label.querySelector("p").innerHTML;
+function renderNameAsMarkdown(label: HTMLSpanElement, getFile: GetFile, component: Component): void {
+    MarkdownRenderer.renderMarkdown(label.innerHTML, label, getFile(), component).then(() => {
+        // rendering wraps it in a paragraph
+        label.innerHTML = label.querySelector("p").innerHTML;
+    });
 }
 
 

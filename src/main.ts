@@ -37,7 +37,7 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
                 }
             }));
 
-            await displayTracker(tracker, e, getFile, () => i.getSectionInfo(e), this.settings, component);
+            displayTracker(tracker, e, getFile, () => i.getSectionInfo(e), this.settings, component);
             i.addChild(component);
         });
 
