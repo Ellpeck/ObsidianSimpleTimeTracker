@@ -34,7 +34,7 @@ export function loadTracker(json: string): Tracker {
     if (json) {
         try {
             let ret = JSON.parse(json);
-            fixLegacyTimestamps(ret.entries);
+            updateLegacyInfo(ret.entries);
             return ret;
         } catch (e) {
             console.log(`Failed to parse Tracker from ${json}`);
@@ -308,15 +308,20 @@ function unformatEditableTimestamp(formatted: string, settings: SimpleTimeTracke
     return moment(formatted, settings.editableTimestampFormat).toISOString();
 }
 
-function fixLegacyTimestamps(entries: Entry[]): void {
+function updateLegacyInfo(entries: Entry[]): void {
     for (let entry of entries) {
+        // in 0.1.8, timestamps were changed from unix to iso
         if (entry.startTime && !isNaN(+entry.startTime))
             entry.startTime = moment.unix(+entry.startTime).toISOString();
         if (entry.endTime && !isNaN(+entry.endTime))
             entry.endTime = moment.unix(+entry.endTime).toISOString();
 
+        // in 1.0.0, sub-entries were made optional
+        if (entry.subEntries == null || !entry.subEntries.length)
+            entry.subEntries = undefined;
+
         if (entry.subEntries)
-            fixLegacyTimestamps(entry.subEntries);
+            updateLegacyInfo(entry.subEntries);
     }
 }
 
