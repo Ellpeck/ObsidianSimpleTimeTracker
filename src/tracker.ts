@@ -349,7 +349,7 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
 
     row.createEl("td", { text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : "" });
 
-    void renderNameAsMarkdown(nameField.label, getFile, component);
+    renderNameAsMarkdown(nameField.label, getFile, component);
 
     let expandButton = new ButtonComponent(nameField.label)
         .setClass("clickable-icon")
@@ -394,7 +394,7 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
                 await saveTracker(tracker, getFile(), getSectionInfo());
                 editButton.setIcon("lucide-pencil");
 
-                void renderNameAsMarkdown(nameField.label, getFile, component);
+                renderNameAsMarkdown(nameField.label, getFile, component);
             } else {
                 nameField.beginEdit(entry.name);
                 expandButton.buttonEl.style.display = "none";
@@ -438,10 +438,10 @@ function showConfirm(message: string): Promise<boolean> {
 }
 
 function renderNameAsMarkdown(label: HTMLSpanElement, getFile: GetFile, component: Component): void {
-    MarkdownRenderer.renderMarkdown(label.innerHTML, label, getFile(), component).then(() => {
-        // rendering wraps it in a paragraph
-        label.innerHTML = label.querySelector("p").innerHTML;
-    });
+    // we don't have to wait here since async code only occurs when a file needs to be loaded (like a linked image)
+    void MarkdownRenderer.renderMarkdown(label.innerHTML, label, getFile(), component);
+    // rendering wraps it in a paragraph
+    label.innerHTML = label.querySelector("p").innerHTML;
 }
 
 

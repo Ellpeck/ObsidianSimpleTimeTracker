@@ -21,7 +21,7 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
 
         this.addSettingTab(new SimpleTimeTrackerSettingsTab(this.app, this));
 
-        this.registerMarkdownCodeBlockProcessor("simple-time-tracker", async (s, e, i) => {
+        this.registerMarkdownCodeBlockProcessor("simple-time-tracker", (s, e, i) => {
             e.empty();
             let component = new MarkdownRenderChild(e);
             let tracker = loadTracker(s);
