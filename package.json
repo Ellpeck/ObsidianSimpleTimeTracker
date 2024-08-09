@@ -1,6 +1,6 @@
 {
     "name": "simple-time-tracker",
-    "version": "0.2.2",
+    "version": "1.0.0",
     "description": "Multi-purpose time trackers for your notes!",
     "main": "main.js",
     "scripts": {
