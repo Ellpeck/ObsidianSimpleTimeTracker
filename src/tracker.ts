@@ -1,5 +1,5 @@
-import {moment, App, MarkdownSectionInformation, ButtonComponent, TextComponent, TFile, MarkdownRenderer, Component, MarkdownRenderChild} from "obsidian";
-import {SimpleTimeTrackerSettings} from "./settings";
+import { moment, MarkdownSectionInformation, ButtonComponent, TextComponent, TFile, MarkdownRenderer, Component, MarkdownRenderChild } from "obsidian";
+import { SimpleTimeTrackerSettings } from "./settings";
 import { ConfirmModal } from "./confirm-modal";
 
 export interface Tracker {
@@ -13,7 +13,7 @@ export interface Entry {
     subEntries: Entry[];
 }
 
-export async function saveTracker(tracker: Tracker, app: App, fileName: string, section: MarkdownSectionInformation): Promise<void> {
+export async function saveTracker(tracker: Tracker, fileName: string, section: MarkdownSectionInformation): Promise<void> {
     let file = app.vault.getAbstractFileByPath(fileName) as TFile;
     if (!file)
         return;
@@ -39,13 +39,37 @@ export function loadTracker(json: string): Tracker {
             console.log(`Failed to parse Tracker from ${json}`);
         }
     }
-    return {entries: []};
+    return { entries: [] };
+}
+
+export async function loadAllTrackers(fileName: string): Promise<{ section: MarkdownSectionInformation, tracker: Tracker }[]> {
+    let file = app.vault.getAbstractFileByPath(fileName);
+    let content = (await app.vault.cachedRead(file as TFile)).split("\n");
+
+    let trackers: { section: MarkdownSectionInformation, tracker: Tracker }[] = [];
+    let curr: Partial<MarkdownSectionInformation> | undefined;
+    for (let i = 0; i < content.length; i++) {
+        let line = content[i];
+        if (line.trimEnd() == "```simple-time-tracker") {
+            curr = { lineStart: i + 1, text: "" };
+        } else if (curr) {
+            if (line.trimEnd() == "```") {
+                curr.lineEnd = i - 1;
+                let tracker = loadTracker(curr.text);
+                trackers.push({ section: curr as MarkdownSectionInformation, tracker: tracker });
+                curr = undefined;
+            } else {
+                curr.text += `${line}\n`;
+            }
+        }
+    }
+    return trackers;
 }
 
 type GetFile = () => string;
 
-export function displayTracker(app: App, tracker: Tracker, element: HTMLElement, getFile: GetFile, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, component: MarkdownRenderChild): void {
-   
+export function displayTracker(tracker: Tracker, element: HTMLElement, getFile: GetFile, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, component: MarkdownRenderChild): void {
+
     element.addClass("simple-time-tracker-container");
     // add start/stop controls
     let running = isRunning(tracker);
@@ -59,7 +83,7 @@ export function displayTracker(app: App, tracker: Tracker, element: HTMLElement,
             } else {
                 startNewEntry(tracker, newSegmentNameBox.getValue());
             }
-            await saveTracker(tracker, this.app, getFile(), getSectionInfo());
+            await saveTracker(tracker, getFile(), getSectionInfo());
         });
     btn.buttonEl.addClass("simple-time-tracker-btn");
     let newSegmentNameBox = new TextComponent(element)
@@ -68,29 +92,29 @@ export function displayTracker(app: App, tracker: Tracker, element: HTMLElement,
     newSegmentNameBox.inputEl.addClass("simple-time-tracker-txt");
 
     // add timers
-    let timer = element.createDiv({cls: "simple-time-tracker-timers"});
-    let currentDiv = timer.createEl("div", {cls: "simple-time-tracker-timer"});
-    let current = currentDiv.createEl("span", {cls: "simple-time-tracker-timer-time"});
-    currentDiv.createEl("span", {text: "Current"});
-    let totalDiv = timer.createEl("div", {cls: "simple-time-tracker-timer"});
-    let total = totalDiv.createEl("span", {cls: "simple-time-tracker-timer-time", text: "0s"});
-    totalDiv.createEl("span", {text: "Total"});
+    let timer = element.createDiv({ cls: "simple-time-tracker-timers" });
+    let currentDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
+    let current = currentDiv.createEl("span", { cls: "simple-time-tracker-timer-time" });
+    currentDiv.createEl("span", { text: "Current" });
+    let totalDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
+    let total = totalDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "0s" });
+    totalDiv.createEl("span", { text: "Total" });
 
     if (tracker.entries.length > 0) {
         // add table
-        let table = element.createEl("table", {cls: "simple-time-tracker-table"});
+        let table = element.createEl("table", { cls: "simple-time-tracker-table" });
         table.createEl("tr").append(
-            createEl("th", {text: "Segment"}),
-            createEl("th", {text: "Start time"}),
-            createEl("th", {text: "End time"}),
-            createEl("th", {text: "Duration"}),
+            createEl("th", { text: "Segment" }),
+            createEl("th", { text: "Start time" }),
+            createEl("th", { text: "End time" }),
+            createEl("th", { text: "Duration" }),
             createEl("th"));
 
         for (let entry of orderedEntries(tracker.entries, settings))
-            addEditableTableRow(app, tracker, entry, table, newSegmentNameBox, running, getFile, getSectionInfo, settings, 0, component);
+            addEditableTableRow(tracker, entry, table, newSegmentNameBox, running, getFile, getSectionInfo, settings, 0, component);
 
         // add copy buttons
-        let buttons = element.createEl("div", {cls: "simple-time-tracker-bottom"});
+        let buttons = element.createEl("div", { cls: "simple-time-tracker-bottom" });
         new ButtonComponent(buttons)
             .setButtonText("Copy as table")
             .onClick(() => navigator.clipboard.writeText(createMarkdownTable(tracker, settings)));
@@ -111,57 +135,27 @@ export function displayTracker(app: App, tracker: Tracker, element: HTMLElement,
     }, 1000);
 }
 
-function startSubEntry(entry: Entry, name: string): void {
-    // if this entry is not split yet, we add its time as a sub-entry instead
-    if (!entry.subEntries) {
-        entry.subEntries = [{...entry, name: `Part 1`}];
-        entry.startTime = null;
-        entry.endTime = null;
-    }
-
-    if (!name)
-        name = `Part ${entry.subEntries.length + 1}`;
-    entry.subEntries.push({name: name, startTime: moment().toISOString(), endTime: null, subEntries: null});
-}
-
-function startNewEntry(tracker: Tracker, name: string): void {
-    if (!name)
-        name = `Segment ${tracker.entries.length + 1}`;
-    let entry: Entry = {name: name, startTime: moment().toISOString(), endTime: null, subEntries: null};
-    tracker.entries.push(entry);
-}
-
-function endRunningEntry(tracker: Tracker): void {
-    let entry = getRunningEntry(tracker.entries);
-    entry.endTime = moment().toISOString();
-}
-
-function removeEntry(entries: Entry[], toRemove: Entry): boolean {
-    if (entries.contains(toRemove)) {
-        entries.remove(toRemove);
-        return true;
+export function getDuration(entry: Entry): number {
+    if (entry.subEntries) {
+        return getTotalDuration(entry.subEntries);
     } else {
-        for (let entry of entries) {
-            if (entry.subEntries && removeEntry(entry.subEntries, toRemove)) {
-                // if we only have one sub entry remaining, we can merge back into our main entry
-                if (entry.subEntries.length == 1) {
-                    let single = entry.subEntries[0];
-                    entry.startTime = single.startTime;
-                    entry.endTime = single.endTime;
-                    entry.subEntries = null;
-                }
-                return true;
-            }
-        }
+        let endTime = entry.endTime ? moment(entry.endTime) : moment();
+        return endTime.diff(moment(entry.startTime));
     }
-    return false;
 }
 
-function isRunning(tracker: Tracker): boolean {
+export function getTotalDuration(entries: Entry[]): number {
+    let ret = 0;
+    for (let entry of entries)
+        ret += getDuration(entry);
+    return ret;
+}
+
+export function isRunning(tracker: Tracker): boolean {
     return !!getRunningEntry(tracker.entries);
 }
 
-function getRunningEntry(entries: Entry[]): Entry {
+export function getRunningEntry(entries: Entry[]): Entry {
     for (let entry of entries) {
         // if this entry has sub entries, check if one of them is running
         if (entry.subEntries) {
@@ -177,46 +171,46 @@ function getRunningEntry(entries: Entry[]): Entry {
     return null;
 }
 
-function getDuration(entry: Entry): number {
-    if (entry.subEntries) {
-        return getTotalDuration(entry.subEntries);
-    } else {
-        let endTime = entry.endTime ? moment(entry.endTime) : moment();
-        return endTime.diff(moment(entry.startTime));
-    }
-}
+export function createMarkdownTable(tracker: Tracker, settings: SimpleTimeTrackerSettings): string {
+    let table = [["Segment", "Start time", "End time", "Duration"]];
+    for (let entry of orderedEntries(tracker.entries, settings))
+        table.push(...createTableSection(entry, settings));
+    table.push(["**Total**", "", "", `**${formatDuration(getTotalDuration(tracker.entries), settings)}**`]);
 
-function getTotalDuration(entries: Entry[]): number {
-    let ret = 0;
-    for (let entry of entries)
-        ret += getDuration(entry);
+    let ret = "";
+    // calculate the width every column needs to look neat when monospaced
+    let widths = Array.from(Array(4).keys()).map(i => Math.max(...table.map(a => a[i].length)));
+    for (let r = 0; r < table.length; r++) {
+        // add separators after first row
+        if (r == 1)
+            ret += "| " + Array.from(Array(4).keys()).map(i => "-".repeat(widths[i])).join(" | ") + " |\n";
+
+        let row: string[] = [];
+        for (let i = 0; i < 4; i++)
+            row.push(table[r][i].padEnd(widths[i], " "));
+        ret += "| " + row.join(" | ") + " |\n";
+    }
     return ret;
 }
 
-function setCountdownValues(tracker: Tracker, current: HTMLElement, total: HTMLElement, currentDiv: HTMLDivElement, settings: SimpleTimeTrackerSettings): void {
-    let running = getRunningEntry(tracker.entries);
-    if (running && !running.endTime) {
-        current.setText(formatDuration(getDuration(running), settings));
-        currentDiv.hidden = false;
-    } else {
-        currentDiv.hidden = true;
+export function createCsv(tracker: Tracker, settings: SimpleTimeTrackerSettings): string {
+    let ret = "";
+    for (let entry of orderedEntries(tracker.entries, settings)) {
+        for (let row of createTableSection(entry, settings))
+            ret += row.join(settings.csvDelimiter) + "\n";
     }
-    total.setText(formatDuration(getTotalDuration(tracker.entries), settings));
+    return ret;
 }
 
-function formatTimestamp(timestamp: string, settings: SimpleTimeTrackerSettings): string {
+export function orderedEntries(entries: Entry[], settings: SimpleTimeTrackerSettings): Entry[] {
+    return settings.reverseSegmentOrder ? entries.slice().reverse() : entries;
+}
+
+export function formatTimestamp(timestamp: string, settings: SimpleTimeTrackerSettings): string {
     return moment(timestamp).format(settings.timestampFormat);
 }
 
-function formatEditableTimestamp(timestamp: string, settings: SimpleTimeTrackerSettings): string {
-    return moment(timestamp).format(settings.editableTimestampFormat);
-}
-
-function unformatEditableTimestamp(formatted: string, settings: SimpleTimeTrackerSettings): string {
-    return moment(formatted, settings.editableTimestampFormat).toISOString();
-}
-
-function formatDuration(totalTime: number, settings: SimpleTimeTrackerSettings): string {
+export function formatDuration(totalTime: number, settings: SimpleTimeTrackerSettings): string {
     let ret = "";
     let duration = moment.duration(totalTime);
     let hours = settings.fineGrainedDurations ? duration.hours() : Math.floor(duration.asHours());
@@ -247,6 +241,72 @@ function formatDuration(totalTime: number, settings: SimpleTimeTrackerSettings):
     return ret;
 }
 
+
+function startSubEntry(entry: Entry, name: string): void {
+    // if this entry is not split yet, we add its time as a sub-entry instead
+    if (!entry.subEntries) {
+        entry.subEntries = [{ ...entry, name: `Part 1` }];
+        entry.startTime = null;
+        entry.endTime = null;
+    }
+
+    if (!name)
+        name = `Part ${entry.subEntries.length + 1}`;
+    entry.subEntries.push({ name: name, startTime: moment().toISOString(), endTime: null, subEntries: null });
+}
+
+function startNewEntry(tracker: Tracker, name: string): void {
+    if (!name)
+        name = `Segment ${tracker.entries.length + 1}`;
+    let entry: Entry = { name: name, startTime: moment().toISOString(), endTime: null, subEntries: null };
+    tracker.entries.push(entry);
+}
+
+function endRunningEntry(tracker: Tracker): void {
+    let entry = getRunningEntry(tracker.entries);
+    entry.endTime = moment().toISOString();
+}
+
+function removeEntry(entries: Entry[], toRemove: Entry): boolean {
+    if (entries.contains(toRemove)) {
+        entries.remove(toRemove);
+        return true;
+    } else {
+        for (let entry of entries) {
+            if (entry.subEntries && removeEntry(entry.subEntries, toRemove)) {
+                // if we only have one sub entry remaining, we can merge back into our main entry
+                if (entry.subEntries.length == 1) {
+                    let single = entry.subEntries[0];
+                    entry.startTime = single.startTime;
+                    entry.endTime = single.endTime;
+                    entry.subEntries = null;
+                }
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function setCountdownValues(tracker: Tracker, current: HTMLElement, total: HTMLElement, currentDiv: HTMLDivElement, settings: SimpleTimeTrackerSettings): void {
+    let running = getRunningEntry(tracker.entries);
+    if (running && !running.endTime) {
+        current.setText(formatDuration(getDuration(running), settings));
+        currentDiv.hidden = false;
+    } else {
+        currentDiv.hidden = true;
+    }
+    total.setText(formatDuration(getTotalDuration(tracker.entries), settings));
+}
+
+function formatEditableTimestamp(timestamp: string, settings: SimpleTimeTrackerSettings): string {
+    return moment(timestamp).format(settings.editableTimestampFormat);
+}
+
+function unformatEditableTimestamp(formatted: string, settings: SimpleTimeTrackerSettings): string {
+    return moment(formatted, settings.editableTimestampFormat).toISOString();
+}
+
 function fixLegacyTimestamps(entries: Entry[]): void {
     for (let entry of entries) {
         if (entry.startTime && !isNaN(+entry.startTime))
@@ -259,36 +319,6 @@ function fixLegacyTimestamps(entries: Entry[]): void {
     }
 }
 
-function createMarkdownTable(tracker: Tracker, settings: SimpleTimeTrackerSettings): string {
-    let table = [["Segment", "Start time", "End time", "Duration"]];
-    for (let entry of orderedEntries(tracker.entries, settings))
-        table.push(...createTableSection(entry, settings));
-    table.push(["**Total**", "", "", `**${formatDuration(getTotalDuration(tracker.entries), settings)}**`]);
-
-    let ret = "";
-    // calculate the width every column needs to look neat when monospaced
-    let widths = Array.from(Array(4).keys()).map(i => Math.max(...table.map(a => a[i].length)));
-    for (let r = 0; r < table.length; r++) {
-        // add separators after first row
-        if (r == 1)
-            ret += "| " + Array.from(Array(4).keys()).map(i => "-".repeat(widths[i])).join(" | ") + " |\n";
-
-        let row: string[] = [];
-        for (let i = 0; i < 4; i++)
-            row.push(table[r][i].padEnd(widths[i], " "));
-        ret += "| " + row.join(" | ") + " |\n";
-    }
-    return ret;
-}
-
-function createCsv(tracker: Tracker, settings: SimpleTimeTrackerSettings): string {
-    let ret = "";
-    for (let entry of orderedEntries(tracker.entries, settings)) {
-        for (let row of createTableSection(entry, settings))
-            ret += row.join(settings.csvDelimiter) + "\n";
-    }
-    return ret;
-}
 
 function createTableSection(entry: Entry, settings: SimpleTimeTrackerSettings): string[][] {
     let ret = [[
@@ -303,11 +333,7 @@ function createTableSection(entry: Entry, settings: SimpleTimeTrackerSettings): 
     return ret;
 }
 
-function orderedEntries(entries: Entry[], settings: SimpleTimeTrackerSettings): Entry[] {
-    return settings.reverseSegmentOrder ? entries.slice().reverse() : entries;
-}
-
-function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, trackerRunning: boolean, getFile: GetFile, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number, component: MarkdownRenderChild): void {
+function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, trackerRunning: boolean, getFile: GetFile, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number, component: MarkdownRenderChild): void {
     let entryRunning = getRunningEntry(tracker.entries) == entry;
     let row = table.createEl("tr");
 
@@ -315,7 +341,7 @@ function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HT
     let startField = new EditableTimestampField(row, (entry.startTime), settings);
     let endField = new EditableTimestampField(row, (entry.endTime), settings);
 
-    row.createEl("td", {text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : ""});
+    row.createEl("td", { text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : "" });
 
     renderNameAsMarkdown(nameField.label, getFile, component);
 
@@ -328,7 +354,7 @@ function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HT
         .setDisabled(trackerRunning)
         .onClick(async () => {
             startSubEntry(entry, newSegmentNameBox.getValue());
-            await saveTracker(tracker, this.app, getFile(), getSectionInfo());
+            await saveTracker(tracker, getFile(), getSectionInfo());
         });
     let editButton = new ButtonComponent(entryButtons)
         .setClass("clickable-icon")
@@ -343,7 +369,7 @@ function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HT
                     endField.endEdit();
                     entry.endTime = endField.getTimestamp();
                 }
-                await saveTracker(tracker, this.app, getFile(), getSectionInfo());
+                await saveTracker(tracker, getFile(), getSectionInfo());
                 editButton.setIcon("lucide-pencil");
 
                 renderNameAsMarkdown(nameField.label, getFile, component);
@@ -365,23 +391,23 @@ function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HT
         .setDisabled(entryRunning)
         .onClick(async () => {
 
-            const confirmed = await showConfirm(app, "Are you sure you want to delete this entry?")
-            
+            const confirmed = await showConfirm("Are you sure you want to delete this entry?");
+
             if (!confirmed) {
                 return;
             }
-            
+
             removeEntry(tracker.entries, entry);
-            await saveTracker(tracker, this.app, getFile(), getSectionInfo());
+            await saveTracker(tracker, getFile(), getSectionInfo());
         });
 
     if (entry.subEntries) {
         for (let sub of orderedEntries(entry.subEntries, settings))
-            addEditableTableRow(app, tracker, sub, table, newSegmentNameBox, trackerRunning, getFile, getSectionInfo, settings, indent + 1, component);
+            addEditableTableRow(tracker, sub, table, newSegmentNameBox, trackerRunning, getFile, getSectionInfo, settings, indent + 1, component);
     }
 }
 
- function showConfirm(app: App, message: string): Promise<boolean> {
+function showConfirm(message: string): Promise<boolean> {
     return new Promise((resolve) => {
         const modal = new ConfirmModal(app, message, resolve);
         modal.open();
@@ -402,7 +428,7 @@ class EditableField {
 
     constructor(row: HTMLTableRowElement, indent: number, value: string) {
         this.cell = row.createEl("td");
-        this.label = this.cell.createEl("span", {text: value});
+        this.label = this.cell.createEl("span", { text: value });
         this.label.style.marginLeft = `${indent}em`;
         this.box = new TextComponent(this.cell).setValue(value);
         this.box.inputEl.addClass("simple-time-tracker-input");

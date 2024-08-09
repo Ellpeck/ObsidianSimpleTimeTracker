@@ -1,11 +1,21 @@
-import {MarkdownRenderChild, Plugin, TFile} from "obsidian";
+import { MarkdownRenderChild, Plugin, TFile } from "obsidian";
 import { defaultSettings, SimpleTimeTrackerSettings } from "./settings";
 import { SimpleTimeTrackerSettingsTab } from "./settings-tab";
-import { displayTracker, loadTracker } from "./tracker";
+import { displayTracker, Entry, formatDuration, formatTimestamp, getDuration, getRunningEntry, getTotalDuration, isRunning, loadAllTrackers, loadTracker, orderedEntries } from "./tracker";
 
 export default class SimpleTimeTrackerPlugin extends Plugin {
 
-    settings: SimpleTimeTrackerSettings;
+    public api = {
+        // verbatim versions of the functions found in tracker.ts with the same parameters
+        loadTracker, loadAllTrackers, getDuration, getTotalDuration, getRunningEntry, isRunning,
+
+        // modified versions of the functions found in tracker.ts, with the number of required arguments reduced
+        formatTimestamp: (timestamp: string) => formatTimestamp(timestamp, this.settings),
+        formatDuration: (totalTime: number) => formatDuration(totalTime, this.settings),
+        orderedEntries: (entries: Entry[]) => orderedEntries(entries, this.settings)
+    };
+
+    private settings: SimpleTimeTrackerSettings;
 
     async onload(): Promise<void> {
         await this.loadSettings();
@@ -14,7 +24,7 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
 
         this.registerMarkdownCodeBlockProcessor("simple-time-tracker", (s, e, i) => {
             e.empty();
-            let component = new MarkdownRenderChild(e)
+            let component = new MarkdownRenderChild(e);
             let tracker = loadTracker(s);
 
             // Initial file name
@@ -28,13 +38,13 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
                 if (file instanceof TFile && oldPath === filePath) {
                     filePath = file.path;
                 }
-            })
+            });
 
             // Register the event to remove on unload
             component.registerEvent(renameEventRef);
 
-            displayTracker(this.app, tracker, e, getFile, () => i.getSectionInfo(e), this.settings, component);
-            i.addChild(component)
+            displayTracker(tracker, e, getFile, () => i.getSectionInfo(e), this.settings, component);
+            i.addChild(component);
         });
 
         this.addCommand({

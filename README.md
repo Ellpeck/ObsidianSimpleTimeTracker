@@ -12,6 +12,36 @@ Need help using the plugin? Feel free to join the Discord server!
 
 [![Join the Discord server](https://ellpeck.de/res/discord-wide.png)](https://link.ellpeck.de/discordweb)
 
+## 🔍 Tracker Data in Dataview
+Super Simple Time Tracker has a public API that can be used with [Dataview](https://blacksmithgu.github.io/obsidian-dataview/), specifically [DataviewJS](https://blacksmithgu.github.io/obsidian-dataview/api/intro/), which can be accessed using the following code:
+
+```js
+dv.app.plugins.plugins["simple-time-tracker"].api;
+```
+
+The following is a short example that uses DataviewJS to load all trackers in the vault and print the total duration of each tracker. You can also find this example in action [in the test vault]().
+
+```js
+// get the time tracker plugin api instance
+let api = dv.app.plugins.plugins["simple-time-tracker"].api;
+
+for (let page of dv.pages()) {
+    // load trackers in the file with the given path
+    let trackers = await api.loadAllTrackers(page.file.path);
+
+    if (trackers.length)
+        dv.el("strong", "Trackers in " + page.file.name);
+
+    for (let { section, tracker } of trackers) {
+        // print the total duration of the tracker
+        let duration = api.getTotalDuration(tracker.entries);
+        dv.el("p", api.formatDuration(duration));
+    }
+}
+```
+
+A full list of the functions exposed through the API can be found [in the code]().
+
 # 👀 What it does
 A time tracker is really just a special code block that stores information about the times you pressed the Start and End buttons on. Since time is tracked solely through timestamps, you can switch notes, close Obsidian or even shut down your device completely while the tracker is running! Once you come back, your time tracker will still be running.
 
