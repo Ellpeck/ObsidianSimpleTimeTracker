@@ -19,7 +19,7 @@ Super Simple Time Tracker has a public API that can be used with [Dataview](http
 dv.app.plugins.plugins["simple-time-tracker"].api;
 ```
 
-The following is a short example that uses DataviewJS to load all trackers in the vault and print the total duration of each tracker. You can also find this example in action [in the test vault]().
+The following is a short example that uses DataviewJS to load all trackers in the vault and print the total duration of each tracker. You can also find this example in action [in the test vault](https://github.com/Ellpeck/ObsidianSimpleTimeTracker/blob/master/test-vault/dataview-test.md?plain=1).
 
 ```js
 // get the time tracker plugin api instance
@@ -40,7 +40,7 @@ for (let page of dv.pages()) {
 }
 ```
 
-A full list of the functions exposed through the API can be found [in the code]().
+A full list of the functions exposed through the API can be found [in the code](https://github.com/Ellpeck/ObsidianSimpleTimeTracker/blob/master/src/main.ts#L8-L16). Proper documentation for the API will be added in the future.
 
 # 👀 What it does
 A time tracker is really just a special code block that stores information about the times you pressed the Start and End buttons on. Since time is tracked solely through timestamps, you can switch notes, close Obsidian or even shut down your device completely while the tracker is running! Once you come back, your time tracker will still be running.
