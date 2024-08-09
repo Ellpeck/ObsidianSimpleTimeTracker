@@ -10,7 +10,7 @@ export interface Entry {
     name: string;
     startTime: string;
     endTime: string;
-    subEntries: Entry[];
+    subEntries?: Entry[];
     collapsed?: boolean;
 }
 
@@ -253,13 +253,13 @@ function startSubEntry(entry: Entry, name: string): void {
 
     if (!name)
         name = `Part ${entry.subEntries.length + 1}`;
-    entry.subEntries.push({ name: name, startTime: moment().toISOString(), endTime: null, subEntries: null });
+    entry.subEntries.push({ name: name, startTime: moment().toISOString(), endTime: null, subEntries: undefined });
 }
 
 function startNewEntry(tracker: Tracker, name: string): void {
     if (!name)
         name = `Segment ${tracker.entries.length + 1}`;
-    let entry: Entry = { name: name, startTime: moment().toISOString(), endTime: null, subEntries: null };
+    let entry: Entry = { name: name, startTime: moment().toISOString(), endTime: null, subEntries: undefined };
     tracker.entries.push(entry);
 }
 
@@ -280,7 +280,7 @@ function removeEntry(entries: Entry[], toRemove: Entry): boolean {
                     let single = entry.subEntries[0];
                     entry.startTime = single.startTime;
                     entry.endTime = single.endTime;
-                    entry.subEntries = null;
+                    entry.subEntries = undefined;
                 }
                 return true;
             }
