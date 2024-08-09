@@ -21,28 +21,23 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
 
         this.addSettingTab(new SimpleTimeTrackerSettingsTab(this.app, this));
 
-        this.registerMarkdownCodeBlockProcessor("simple-time-tracker", (s, e, i) => {
+        this.registerMarkdownCodeBlockProcessor("simple-time-tracker", async (s, e, i) => {
             e.empty();
             let component = new MarkdownRenderChild(e);
             let tracker = loadTracker(s);
 
-            // Initial file name
+            // Wrap file name in a function since it can change
             let filePath = i.sourcePath;
-
-            // Getter passed to displayTracker since the file name can change
             const getFile = () => filePath;
 
             // Hook rename events to update the file path
-            const renameEventRef = this.app.vault.on("rename", (file, oldPath) => {
+            component.registerEvent(this.app.vault.on("rename", (file, oldPath) => {
                 if (file instanceof TFile && oldPath === filePath) {
                     filePath = file.path;
                 }
-            });
+            }));
 
-            // Register the event to remove on unload
-            component.registerEvent(renameEventRef);
-
-            displayTracker(tracker, e, getFile, () => i.getSectionInfo(e), this.settings, component);
+            await displayTracker(tracker, e, getFile, () => i.getSectionInfo(e), this.settings, component);
             i.addChild(component);
         });
 
