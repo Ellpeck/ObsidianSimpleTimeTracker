@@ -14,8 +14,7 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
         formatDuration: (totalTime: number) => formatDuration(totalTime, this.settings),
         orderedEntries: (entries: Entry[]) => orderedEntries(entries, this.settings)
     };
-
-    private settings: SimpleTimeTrackerSettings;
+    public settings: SimpleTimeTrackerSettings;
 
     async onload(): Promise<void> {
         await this.loadSettings();
