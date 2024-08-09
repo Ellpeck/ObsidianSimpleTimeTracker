@@ -349,18 +349,17 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
     let expandButton = new ButtonComponent(nameField.label)
         .setClass("clickable-icon")
         .setClass("simple-time-tracker-expand-button")
-        .setIcon(`chevron-${entry.collapsed ? 'right' : 'down'}`)
-        .setTooltip(entry.collapsed ? "Expand" : "Collapse")
+        .setIcon(`chevron-${entry.collapsed ? "left" : "down"}`)
         .onClick(async () => {
             if (entry.collapsed) {
-                delete entry.collapsed;
+                entry.collapsed = undefined;
             } else {
                 entry.collapsed = true;
             }
-            await saveTracker(tracker, this.app, getFile(), getSectionInfo());
+            await saveTracker(tracker, getFile(), getSectionInfo());
         });
-    if (!entry.subEntries?.length) expandButton.buttonEl.style.visibility = 'hidden';
-    nameField.cell.insertBefore(expandButton.buttonEl, nameField.label);
+    if (!entry.subEntries)
+        expandButton.buttonEl.style.visibility = "hidden";
 
     let entryButtons = row.createEl("td");
     entryButtons.addClass("simple-time-tracker-table-buttons");
@@ -393,7 +392,7 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
                 renderNameAsMarkdown(nameField.label, getFile, component);
             } else {
                 nameField.beginEdit(entry.name);
-                expandButton.buttonEl.style.display = 'none';
+                expandButton.buttonEl.style.display = "none";
                 // only allow editing start and end times if we don't have sub entries
                 if (!entry.subEntries) {
                     startField.beginEdit(entry.startTime);

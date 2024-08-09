@@ -64,7 +64,12 @@
 }
 
 .simple-time-tracker-table .clickable-icon {
-    display: inline;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.simple-time-tracker-expand-button {
+    margin-inline-start: 0.5em;
 }
 
 .simple-time-tracker-input {
