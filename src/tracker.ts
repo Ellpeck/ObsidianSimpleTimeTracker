@@ -382,31 +382,65 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
         .setTooltip("Edit")
         .setIcon("lucide-pencil")
         .onClick(async () => {
-            if (nameField.editing()) {
-                entry.name = nameField.endEdit();
-                expandButton.buttonEl.style.display = null;
-                startField.endEdit();
-                entry.startTime = startField.getTimestamp();
-                if (!entryRunning) {
-                    endField.endEdit();
-                    entry.endTime = endField.getTimestamp();
-                }
-                await saveTracker(tracker, getFile(), getSectionInfo());
-                editButton.setIcon("lucide-pencil");
-
-                renderNameAsMarkdown(nameField.label, getFile, component);
-            } else {
-                nameField.beginEdit(entry.name);
-                expandButton.buttonEl.style.display = "none";
-                // only allow editing start and end times if we don't have sub entries
-                if (!entry.subEntries) {
-                    startField.beginEdit(entry.startTime);
-                    if (!entryRunning)
-                        endField.beginEdit(entry.endTime);
-                }
-                editButton.setIcon("lucide-check");
-            }
+            await handleEdit();
         });
+
+    // Add double-click to edit functionality
+    nameField.label.addEventListener('dblclick', async () => {
+        if (!nameField.editing()) {
+            await handleEdit();
+        }
+    });
+
+    async function handleEdit() {
+        if (nameField.editing()) {
+            await saveChanges();
+        } else {
+            startEditing();
+        }
+    }
+
+    async function saveChanges() {
+        entry.name = nameField.endEdit();
+        expandButton.buttonEl.style.display = null;
+        startField.endEdit();
+        entry.startTime = startField.getTimestamp();
+        if (!entryRunning) {
+            endField.endEdit();
+            entry.endTime = endField.getTimestamp();
+        }
+        await saveTracker(tracker, getFile(), getSectionInfo());
+        editButton.setIcon("lucide-pencil");
+        renderNameAsMarkdown(nameField.label, getFile, component);
+    }
+
+    function startEditing() {
+        nameField.beginEdit(entry.name);
+        expandButton.buttonEl.style.display = "none";
+        // only allow editing start and end times if we don't have sub entries
+        if (!entry.subEntries) {
+            startField.beginEdit(entry.startTime);
+            if (!entryRunning)
+                endField.beginEdit(entry.endTime);
+        }
+        editButton.setIcon("lucide-check");
+
+        // Set up save/cancel handlers for keyboard shortcuts
+        nameField.onSave = startField.onSave = endField.onSave = async () => {
+            await saveChanges();
+        };
+
+        nameField.onCancel = startField.onCancel = endField.onCancel = () => {
+            nameField.endEdit();
+            startField.endEdit();
+            if (!entryRunning) {
+                endField.endEdit();
+            }
+            expandButton.buttonEl.style.display = null;
+            editButton.setIcon("lucide-pencil");
+        };
+    }
+
     new ButtonComponent(entryButtons)
         .setClass("clickable-icon")
         .setTooltip("Remove")
@@ -449,6 +483,8 @@ class EditableField {
     cell: HTMLTableCellElement;
     label: HTMLSpanElement;
     box: TextComponent;
+    onSave?: () => void;
+    onCancel?: () => void;
 
     constructor(row: HTMLTableRowElement, indent: number, value: string) {
         this.cell = row.createEl("td");
@@ -457,6 +493,18 @@ class EditableField {
         this.box = new TextComponent(this.cell).setValue(value);
         this.box.inputEl.addClass("simple-time-tracker-input");
         this.box.inputEl.hide();
+        this.box.inputEl.addEventListener('keydown', (e: KeyboardEvent) => {
+            // Save with Ctrl/Cmd + Enter
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.onSave?.();
+            }
+            // Cancel with Escape
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                this.onCancel?.();
+            }
+        });
     }
 
     editing(): boolean {
