@@ -47,6 +47,96 @@ A time tracker is really just a special code block that stores information about
 
 The tracker's information is stored in the code block as JSON data. The names, start times and end times of each segment are stored. They're displayed neatly in the code block in preview or reading mode.
 
+# Tim Tracking Summary / Reporting
+
+1. **Time Tracking Entries with Tags**: Track work sessions with tags to categorize different activities.
+    
+    - Example of an entry: `#tt_dev #tt_client_a #tt_frontend` represents time spent working on the development (frontend) for a specific client.
+        
+2. **Enhanced Reporting Functionality**: Generate time tracking reports for specific time periods, allowing detailed insight into how time was allocated.
+    
+    - **Stream-based Reports**: View summaries of time based on specific streams such as Development, Accounting, etc.
+        
+    - **Client-based Reports**: Track hours spent working for specific clients.
+        
+
+![alt text](reporting-screenshot.png)
+
+The output within Obsidian will render detailed information for each time segment, as shown in the first image.
+
+## Example Report
+
+Call command  `Ctrl+P` select `Insert Time Tracking Summary`
+
+The reporting capability allows generating summaries for specific time ranges and topics:
+
+- **Streams Report**: A summary of all topics (e.g., Development, Accounting) over a selected period.
+    
+    ```
+    time-tracking-summary
+        "2024-11-01", "2024-11-30" 
+    ```
+    
+- **Clients Report**: A summary for individual topic over a given time range.
+    
+    ```
+    time-tracking-summary
+        "2024-11-01", "2024-11-30", clients
+    ```
+    
+
+These examples help demonstrate how you can leverage the new tracking and reporting capabilities.
+
+## How to Use
+
+1. **Tag Configuration**    
+    - Configure your tags, icons, and sub tags using YAML in the settings of the plugin.        
+    - Example configuration can be found in the settings:
+2. **Tag your records with one or more tags / sub tags**
+3. **Inserting Time Tracking Summary**    
+    - Use the newly added command to insert the time tracking summary snippet into a markdown file.        
+    - This will generate a report for a given period, optionally filtered by a specific topic.
+        
+```yaml
+# You can have as many 'sections' as you want to track different domains separately or in parallel
+
+# Example secction / topic 1
+streams:
+  name: "🌊 Streams"
+  items:
+    - topic: "Accounting"
+      icon: "🧮"
+      tag: "#tt_accounting"
+      subTags: []
+
+    - topic: "Development"
+      icon: "💗"
+      tag: "#tt_dev"
+      subTags:
+        - topic: "Frontend"
+          tag: "#tt_frontend"
+          subTags: []
+
+        - topic: "Backend"
+          tag: "#tt_backend"
+          subTags: []
+
+# Example section / topic 2
+clients: 
+  name: "👨🏼‍💼 Clients"
+  items:
+    - topic: "Client A"
+      tag: "#tt_client_a"
+      subTags: []
+
+    - topic: "Client B"
+      tag: "#tt_client_b"
+      subTags: []`
+
+```
+        
+
+        
 # 🙏 Acknowledgements
 If you like this plugin and want to support its development, you can do so through my website by clicking this fancy image!
 

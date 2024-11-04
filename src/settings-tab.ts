@@ -74,6 +74,22 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
                 });
             });
 
+            new Setting(this.containerEl)
+            .setName("Tag Configurations")
+            .setDesc("Configure your tags, icons, and sub-tags using YAML.")
+            .addTextArea((text) => {
+              text
+                .setPlaceholder("Enter tag configurations in YAML format")
+                .setValue(this.plugin.settings.tagConfigurationsYaml)
+                .onChange(async (value) => {
+                  this.plugin.settings.tagConfigurationsYaml = value;
+                  await this.plugin.saveSettings();
+                });
+              text.inputEl.rows = 15;
+              text.inputEl.style.width = "100%";
+            });
+        
+
         this.containerEl.createEl("hr");
         this.containerEl.createEl("p", { text: "Need help using the plugin? Feel free to join the Discord server!" });
         this.containerEl.createEl("a", { href: "https://link.ellpeck.de/discordweb" }).createEl("img", {
