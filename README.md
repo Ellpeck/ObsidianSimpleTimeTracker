@@ -1,7 +1,7 @@
 # Super Simple Time Tracker
 Multi-purpose time trackers for your notes!
 
-![A screenshot of the plugin in action, where you can see an active time tracker for a project](screenshot.jpg)
+![A screenshot of the plugin in action, where you can see an active time tracker for a project](https://raw.githubusercontent.com/Ellpeck/ObsidianSimpleTimeTracker/master/screenshot.jpg)
 
 # 🤔 Usage
 To get started tracking your time with Super Simple Time Tracker, open up the note that you want to track your time in. Move the cursor to the area you want the tracker to reside in, and then open your command palette and execute the `Super Simple Time Tracker: Insert Time Tracker` command.
