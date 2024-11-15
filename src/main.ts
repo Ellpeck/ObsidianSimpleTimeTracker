@@ -1,13 +1,13 @@
 import { MarkdownRenderChild, Plugin, TFile } from "obsidian";
 import { defaultSettings, SimpleTimeTrackerSettings } from "./settings";
 import { SimpleTimeTrackerSettingsTab } from "./settings-tab";
-import { displayTracker, Entry, formatDuration, formatTimestamp, getDuration, getRunningEntry, getTotalDuration, isRunning, loadAllTrackers, loadTracker, orderedEntries } from "./tracker";
+import { displayTracker, Entry, formatDuration, formatTimestamp, getDuration, getDurationToday, getRunningEntry, getTotalDuration, getTotalDurationToday, isRunning, loadAllTrackers, loadTracker, orderedEntries } from "./tracker";
 
 export default class SimpleTimeTrackerPlugin extends Plugin {
 
     public api = {
         // verbatim versions of the functions found in tracker.ts with the same parameters
-        loadTracker, loadAllTrackers, getDuration, getTotalDuration, getRunningEntry, isRunning,
+        loadTracker, loadAllTrackers, getDuration, getTotalDuration, getDurationToday, getTotalDurationToday, getRunningEntry, isRunning,
 
         // modified versions of the functions found in tracker.ts, with the number of required arguments reduced
         formatTimestamp: (timestamp: string) => formatTimestamp(timestamp, this.settings),

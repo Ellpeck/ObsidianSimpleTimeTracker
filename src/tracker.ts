@@ -101,6 +101,12 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getFile: 
     let total = totalDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "0s" });
     totalDiv.createEl("span", { text: "Total" });
 
+    if (settings.showToday) {
+        let totalTodayDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" })
+        let totalToday = totalTodayDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "0s" })
+        totalTodayDiv.createEl("span", { text: "Today" })
+    }
+
     if (tracker.entries.length > 0) {
         // add table
         let table = element.createEl("table", { cls: "simple-time-tracker-table" });
@@ -145,11 +151,38 @@ export function getDuration(entry: Entry): number {
     }
 }
 
+export function getDurationToday(entry: Entry): number {
+    if (entry.subEntries) {
+        return getTotalDurationToday(entry.subEntries)
+    } else {
+        let today = moment().startOf('day')
+        let endTime = entry.endTime ? moment(entry.endTime) : moment()
+        let startTime = moment(entry.startTime)
+
+        if (endTime.isBefore(today)) {
+            return 0
+        }
+
+        if (startTime.isBefore(today)) {
+            startTime = today
+        }
+
+        return endTime.diff(startTime)
+    }
+}
+
 export function getTotalDuration(entries: Entry[]): number {
     let ret = 0;
     for (let entry of entries)
         ret += getDuration(entry);
     return ret;
+}
+
+export function getTotalDurationToday(entries: Entry[]): number {
+    let ret = 0
+    for (let entry of entries)
+        ret += getDurationToday(entry)
+    return ret
 }
 
 export function isRunning(tracker: Tracker): boolean {

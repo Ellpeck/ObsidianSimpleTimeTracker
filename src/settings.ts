@@ -4,7 +4,8 @@ export const defaultSettings: SimpleTimeTrackerSettings = {
     csvDelimiter: ",",
     fineGrainedDurations: true,
     reverseSegmentOrder: false,
-    timestampDurations: false
+    timestampDurations: false,
+    showToday: false,
 };
 
 export interface SimpleTimeTrackerSettings {
@@ -15,5 +16,5 @@ export interface SimpleTimeTrackerSettings {
     fineGrainedDurations: boolean;
     reverseSegmentOrder: boolean;
     timestampDurations: boolean;
-
+    showToday: boolean;
 }
