@@ -100,9 +100,12 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getFile: 
     let totalDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
     let total = totalDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "0s" });
     totalDiv.createEl("span", { text: "Total" });
-    let totalTodayDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" })
-    let totalToday = totalTodayDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "0s" })
-    totalTodayDiv.createEl("span", { text: "Total Today" })
+
+    if (settings.showToday) {
+        let totalTodayDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" })
+        let totalToday = totalTodayDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "0s" })
+        totalTodayDiv.createEl("span", { text: "Today" })
+    }
 
     if (tracker.entries.length > 0) {
         // add table

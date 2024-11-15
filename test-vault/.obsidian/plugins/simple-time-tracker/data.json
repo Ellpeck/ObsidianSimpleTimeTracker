@@ -4,5 +4,6 @@
   "csvDelimiter": ",",
   "fineGrainedDurations": true,
   "reverseSegmentOrder": false,
-  "timestampDurations": true
+  "timestampDurations": true,
+  "showToday": true
 }

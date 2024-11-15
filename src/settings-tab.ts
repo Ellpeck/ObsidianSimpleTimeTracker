@@ -1,6 +1,6 @@
-import {App, PluginSettingTab, Setting} from "obsidian";
+import { App, PluginSettingTab, Setting } from "obsidian";
 import SimpleTimeTrackerPlugin from "./main";
-import {defaultSettings} from "./settings";
+import { defaultSettings } from "./settings";
 
 export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
 
@@ -13,14 +13,14 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
 
     display(): void {
         this.containerEl.empty();
-        this.containerEl.createEl("h2", {text: "Super Simple Time Tracker Settings"});
+        this.containerEl.createEl("h2", { text: "Super Simple Time Tracker Settings" });
 
         new Setting(this.containerEl)
             .setName("Timestamp Display Format")
             .setDesc(createFragment(f => {
-                f.createSpan({text: "The way that timestamps in time tracker tables should be displayed. Uses "});
-                f.createEl("a", {text: "moment.js", href: "https://momentjs.com/docs/#/parsing/string-format/"});
-                f.createSpan({text: " syntax."});
+                f.createSpan({ text: "The way that timestamps in time tracker tables should be displayed. Uses " });
+                f.createEl("a", { text: "moment.js", href: "https://momentjs.com/docs/#/parsing/string-format/" });
+                f.createSpan({ text: " syntax." });
             }))
             .addText(t => {
                 t.setValue(String(this.plugin.settings.timestampFormat));
@@ -70,6 +70,17 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
                 t.setValue(this.plugin.settings.reverseSegmentOrder);
                 t.onChange(async v => {
                     this.plugin.settings.reverseSegmentOrder = v;
+                    await this.plugin.saveSettings();
+                });
+            });
+
+        new Setting(this.containerEl)
+            .setName('Show Total Today')
+            .setDesc('Whether the total time spent today should be displayed in the tracker table.')
+            .addToggle(t => {
+                t.setValue(this.plugin.settings.showToday);
+                t.onChange(async v => {
+                    this.plugin.settings.showToday = v;
                     await this.plugin.saveSettings();
                 });
             });
