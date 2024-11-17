@@ -358,17 +358,33 @@ function updateLegacyInfo(entries: Entry[]): void {
     }
 }
 
+/**
+ * Recursively generates a table section for the time tracker entries, maintaining the hierarchy
+ * and indenting sub-entries with a dynamic prefix.
+ *
+ * @param entry - The current time tracker entry to process. It may contain nested sub-entries.
+ * @param settings - The settings object for the SimpleTimeTracker, containing format options.
+ * @param indent - The current indentation level, starting at 0 for top-level entries and increasing for sub-entries.
+ *                 This value determines the prefix (e.g., "-", "--") added to sub-entry names.
+ */
+function createTableSection(entry: Entry, settings: SimpleTimeTrackerSettings, indent: number = 0): string[][] {
+    // Create dynamic prefix for sub-entries.
+    const prefix = `${"-".repeat(indent)} `;
 
-function createTableSection(entry: Entry, settings: SimpleTimeTrackerSettings): string[][] {
+    // Generate the table data.
     let ret = [[
-        entry.name,
+        `${prefix}${entry.name}`, // Add prefix based on the indent level.
         entry.startTime ? formatTimestamp(entry.startTime, settings) : "",
         entry.endTime ? formatTimestamp(entry.endTime, settings) : "",
-        entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : ""]];
+        entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : ""
+    ]];
+
+    // If sub-entries exist, add them recursively.
     if (entry.subEntries) {
         for (let sub of orderedEntries(entry.subEntries, settings))
-            ret.push(...createTableSection(sub, settings));
+            ret.push(...createTableSection(sub, settings, indent + 1));
     }
+
     return ret;
 }
 
