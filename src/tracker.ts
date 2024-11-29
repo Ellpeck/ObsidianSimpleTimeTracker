@@ -101,9 +101,12 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getFile: 
     let total = totalDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "0s" });
     totalDiv.createEl("span", { text: "Total" });
 
+    let totalTodayDiv;
+    let totalToday: HTMLElement;
+
     if (settings.showToday) {
-        let totalTodayDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" })
-        let totalToday = totalTodayDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "0s" })
+        totalTodayDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" })
+        totalToday = totalTodayDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "0s" })
         totalTodayDiv.createEl("span", { text: "Today" })
     }
 
@@ -131,14 +134,14 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getFile: 
     }
 
 
-    setCountdownValues(tracker, current, total, currentDiv, settings);
+    setCountdownValues(tracker, current, total, totalToday, currentDiv, settings);
     let intervalId = window.setInterval(() => {
         // we delete the interval timer when the element is removed
         if (!element.isConnected) {
             window.clearInterval(intervalId);
             return;
         }
-        setCountdownValues(tracker, current, total, currentDiv, settings);
+        setCountdownValues(tracker, current, total, totalToday, currentDiv, settings);
     }, 1000);
 }
 
@@ -322,7 +325,7 @@ function removeEntry(entries: Entry[], toRemove: Entry): boolean {
     return false;
 }
 
-function setCountdownValues(tracker: Tracker, current: HTMLElement, total: HTMLElement, currentDiv: HTMLDivElement, settings: SimpleTimeTrackerSettings): void {
+function setCountdownValues(tracker: Tracker, current: HTMLElement, total: HTMLElement, totalToday: HTMLElement, currentDiv: HTMLDivElement, settings: SimpleTimeTrackerSettings): void {
     let running = getRunningEntry(tracker.entries);
     if (running && !running.endTime) {
         current.setText(formatDuration(getDuration(running), settings));
@@ -331,6 +334,7 @@ function setCountdownValues(tracker: Tracker, current: HTMLElement, total: HTMLE
         currentDiv.hidden = true;
     }
     total.setText(formatDuration(getTotalDuration(tracker.entries), settings));
+    totalToday.setText(formatDuration(getTotalDurationToday(tracker.entries), settings));
 }
 
 function formatEditableTimestamp(timestamp: string, settings: SimpleTimeTrackerSettings): string {
