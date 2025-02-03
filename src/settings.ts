@@ -6,6 +6,9 @@ export const defaultSettings: SimpleTimeTrackerSettings = {
     reverseSegmentOrder: false,
     timestampDurations: false,
     showToday: false,
+    
+    timestampRounding: false,
+    timestampRoundTo: 1,
 };
 
 export interface SimpleTimeTrackerSettings {
@@ -17,4 +20,7 @@ export interface SimpleTimeTrackerSettings {
     reverseSegmentOrder: boolean;
     timestampDurations: boolean;
     showToday: boolean;
+
+    timestampRounding: boolean;
+    timestampRoundTo: number;
 }
