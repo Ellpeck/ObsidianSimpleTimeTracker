@@ -97,6 +97,17 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
                 });
             });
 
+        new Setting(this.containerEl)
+            .setName("Prevent Same Start and End Times")
+            .setDesc("Whether the start and end timestamp are allowed to be the same")
+            .addToggle(t => {
+                t.setValue(this.plugin.settings.timestampPreventEndSameAsStart);
+                t.onChange(async v => {
+                    this.plugin.settings.timestampPreventEndSameAsStart = v;
+                    await this.plugin.saveSettings();
+                });
+            });
+
         this.containerEl.createEl("hr");
         this.containerEl.createEl("p", { text: "Need help using the plugin? Feel free to join the Discord server!" });
         this.containerEl.createEl("a", { href: "https://link.ellpeck.de/discordweb" }).createEl("img", {

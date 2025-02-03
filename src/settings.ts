@@ -9,6 +9,7 @@ export const defaultSettings: SimpleTimeTrackerSettings = {
     
     timestampRounding: false,
     timestampRoundTo: 15,
+    timestampPreventEndSameAsStart: false,
 };
 
 export interface SimpleTimeTrackerSettings {
@@ -23,4 +24,5 @@ export interface SimpleTimeTrackerSettings {
 
     timestampRounding: boolean;
     timestampRoundTo: number;
+    timestampPreventEndSameAsStart: boolean;
 }
