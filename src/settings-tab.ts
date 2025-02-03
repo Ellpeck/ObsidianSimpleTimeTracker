@@ -97,18 +97,6 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
                 });
             });
 
-        new Setting(this.containerEl)
-            .setName("Timestamp Rounding Interval")
-            .setDesc("The interval to which timestamps are rounded (when enabled)")
-            .addText(t => {
-                t.setValue(String(this.plugin.settings.timestampRoundTo));
-                t.onChange(async v => {
-                    this.plugin.settings.timestampRoundTo < 0 ? v : defaultSettings.timestampRoundTo;
-                    await this.plugin.saveSettings();
-                });
-            });
-
-
         this.containerEl.createEl("hr");
         this.containerEl.createEl("p", { text: "Need help using the plugin? Feel free to join the Discord server!" });
         this.containerEl.createEl("a", { href: "https://link.ellpeck.de/discordweb" }).createEl("img", {

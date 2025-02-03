@@ -1,7 +1,8 @@
 import { moment, MarkdownSectionInformation, ButtonComponent, TextComponent, TFile, MarkdownRenderer, Component, MarkdownRenderChild } from "obsidian";
 import { SimpleTimeTrackerSettings } from "./settings";
 import { ConfirmModal } from "./confirm-modal";
-//import { moment-round } from "./moment-round";
+import moment from 'moment';
+import 'moment-round';
 
 export interface Tracker {
     entries: Entry[];
@@ -293,23 +294,13 @@ function startSubEntry(entry: Entry, name: string): void {
 function startNewEntry(tracker: Tracker, name: string): void {
     if (!name)
         name = `Segment ${tracker.entries.length + 1}`;
-    
-    // Round relative time evaluation up to nearest 15 min
-    moment.relativeTimeRounding(Math.ceil);
-    moment.relativeTimeThreshold('m', 15);
-    
-    let entry: Entry = { name: name, startTime: moment().toISOString(), endTime: null, subEntries: undefined };
+    let entry: Entry = { name: name, startTime: moment().round(15, 'minutes').toISOString(), endTime: null, subEntries: undefined };
     tracker.entries.push(entry);
 }
 
 function endRunningEntry(tracker: Tracker): void {
     let entry = getRunningEntry(tracker.entries);
-
-    // Round relative time evaluation up to nearest 15 min
-    moment.relativeTimeRounding(Math.ceil);
-    moment.relativeTimeThreshold('m', 15);
-    
-    entry.endTime = moment().toISOString();
+    entry.endTime = moment().round(15, 'minutes').toISOString();
 }
 
 function removeEntry(entries: Entry[], toRemove: Entry): boolean {

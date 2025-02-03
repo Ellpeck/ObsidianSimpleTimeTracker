@@ -1,11 +1,11 @@
 {
-    "id": "simple-time-tracker",
-    "name": "Super Simple Time Tracker",
-    "version": "1.0.3",
+    "id": "lm-simple-time-tracker",
+    "name": "LM Super Simple Time Tracker",
+    "version": "1.0.4",
     "minAppVersion": "1.2.8",
     "description": "Multi-purpose time trackers for your notes!",
-    "author": "Ellpeck",
-    "authorUrl": "https://ellpeck.de",
-    "fundingUrl": "https://ellpeck.de/support",
+    "author": "LM",
+    "authorUrl": "",
+    "fundingUrl": "",
     "isDesktopOnly": false
 }

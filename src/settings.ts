@@ -8,7 +8,7 @@ export const defaultSettings: SimpleTimeTrackerSettings = {
     showToday: false,
     
     timestampRounding: false,
-    timestampRoundTo: 1,
+    timestampRoundTo: 15,
 };
 
 export interface SimpleTimeTrackerSettings {
