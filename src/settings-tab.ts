@@ -85,14 +85,13 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
                 });
             });
 
-        
         new Setting(this.containerEl)
-            .setName("Timestamp Rounding")
-            .setDesc("Whether timestamp are rounded to the nearest interval")
-            .addToggle(t => {
-                t.setValue(this.plugin.settings.timestampRounding);
+            .setName("Timestamp Rounding Interval (minutes)")
+            .setDesc("The interval (minutes) that start and end timestamps should be rounded to. Set to 0 for no rounding (default behaviour).")
+            .addText(t => {
+                t.setValue(String(this.plugin.settings.timestampRoundTo));
                 t.onChange(async v => {
-                    this.plugin.settings.timestampRounding = v;
+                    this.plugin.settings.timestampRoundTo = v.length ? parseInt(v) : defaultSettings.timestampRoundTo;
                     await this.plugin.saveSettings();
                 });
             });

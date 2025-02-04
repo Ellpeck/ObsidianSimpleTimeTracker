@@ -279,9 +279,9 @@ export function formatDuration(totalTime: number, settings: SimpleTimeTrackerSet
 
 
 function getRoundedMomentISOString(settings: SimpleTimeTrackerSettings): string {
-    if (settings.timestampRounding) {
+    if (settings.timestampRoundTo > 0) {
         // Return a rounded moment
-        return moment().round(15, 'minutes').toISOString();
+        return moment().round(settings.timestampRoundTo, 'minutes').toISOString();
     } else {
         // Return a non-rounded moment
         return moment().toISOString();
