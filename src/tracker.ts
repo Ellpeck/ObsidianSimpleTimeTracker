@@ -85,6 +85,12 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getFile: 
                 startNewEntry(tracker, newSegmentNameBox.getValue());
             }
             await saveTracker(tracker, getFile(), getSectionInfo());
+            if (running) {
+                const commandId = settings.trackerEndCommand;
+                if (commandId) {
+                    (app as any).commands.executeCommandById(commandId);
+                }
+            }
         });
     btn.buttonEl.addClass("simple-time-tracker-btn");
     let newSegmentNameBox = new TextComponent(element)

@@ -1,6 +1,7 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import SimpleTimeTrackerPlugin from "./main";
 import { defaultSettings } from "./settings";
+import { CommandSuggestModal } from "./CommandSuggestModal";
 
 export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
 
@@ -82,6 +83,24 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
                 t.onChange(async v => {
                     this.plugin.settings.showToday = v;
                     await this.plugin.saveSettings();
+                });
+            });
+        
+        new Setting(this.containerEl)
+            .setName("Tracker End Command")
+            .setDesc("Select the command to execute when a tracker is ended.")
+            .addButton((button) => {
+                button.setButtonText(
+                    this.plugin.settings.trackerEndCommand
+                        ? this.plugin.settings.trackerEndCommand
+                        : "Select Command"
+                );
+                button.onClick(() => {
+                    new CommandSuggestModal(this.app, (command) => {
+                        this.plugin.settings.trackerEndCommand = command.id;
+                        button.setButtonText(`${command.name}`);
+                        this.plugin.saveSettings();
+                    }).open();
                 });
             });
 
