@@ -101,13 +101,11 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getFile: 
     let total = totalDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "0s" });
     totalDiv.createEl("span", { text: "Total" });
 
-    let totalTodayDiv;
     let totalToday: HTMLElement;
-
     if (settings.showToday) {
-        totalTodayDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" })
-        totalToday = totalTodayDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "0s" })
-        totalTodayDiv.createEl("span", { text: "Today" })
+        let totalTodayDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
+        totalToday = totalTodayDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "0s" });
+        totalTodayDiv.createEl("span", { text: "Today" });
     }
 
     if (tracker.entries.length > 0) {
@@ -156,21 +154,21 @@ export function getDuration(entry: Entry): number {
 
 export function getDurationToday(entry: Entry): number {
     if (entry.subEntries) {
-        return getTotalDurationToday(entry.subEntries)
+        return getTotalDurationToday(entry.subEntries);
     } else {
-        let today = moment().startOf('day')
-        let endTime = entry.endTime ? moment(entry.endTime) : moment()
-        let startTime = moment(entry.startTime)
+        let today = moment().startOf("day");
+        let endTime = entry.endTime ? moment(entry.endTime) : moment();
+        let startTime = moment(entry.startTime);
 
         if (endTime.isBefore(today)) {
-            return 0
+            return 0;
         }
 
         if (startTime.isBefore(today)) {
-            startTime = today
+            startTime = today;
         }
 
-        return endTime.diff(startTime)
+        return endTime.diff(startTime);
     }
 }
 
@@ -182,10 +180,10 @@ export function getTotalDuration(entries: Entry[]): number {
 }
 
 export function getTotalDurationToday(entries: Entry[]): number {
-    let ret = 0
+    let ret = 0;
     for (let entry of entries)
-        ret += getDurationToday(entry)
-    return ret
+        ret += getDurationToday(entry);
+    return ret;
 }
 
 export function isRunning(tracker: Tracker): boolean {
@@ -334,7 +332,7 @@ function setCountdownValues(tracker: Tracker, current: HTMLElement, total: HTMLE
         currentDiv.hidden = true;
     }
     total.setText(formatDuration(getTotalDuration(tracker.entries), settings));
-    totalToday.setText(formatDuration(getTotalDurationToday(tracker.entries), settings));
+    totalToday?.setText(formatDuration(getTotalDurationToday(tracker.entries), settings));
 }
 
 function formatEditableTimestamp(timestamp: string, settings: SimpleTimeTrackerSettings): string {
@@ -439,7 +437,7 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
         });
 
     // Add double-click to edit functionality
-    nameField.label.addEventListener('dblclick', async () => {
+    nameField.label.addEventListener("dblclick", async () => {
         if (!nameField.editing()) {
             await handleEdit();
         }
@@ -546,14 +544,14 @@ class EditableField {
         this.box = new TextComponent(this.cell).setValue(value);
         this.box.inputEl.addClass("simple-time-tracker-input");
         this.box.inputEl.hide();
-        this.box.inputEl.addEventListener('keydown', (e: KeyboardEvent) => {
+        this.box.inputEl.addEventListener("keydown", (e: KeyboardEvent) => {
             // Save with Ctrl/Cmd + Enter
-            if (e.key === 'Enter') {
+            if (e.key === "Enter") {
                 e.preventDefault();
                 this.onSave?.();
             }
             // Cancel with Escape
-            if (e.key === 'Escape') {
+            if (e.key === "Escape") {
                 e.preventDefault();
                 this.onCancel?.();
             }
