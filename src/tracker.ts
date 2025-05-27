@@ -466,7 +466,7 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
     }
 
     function startEditing() {
-        nameField.beginEdit(entry.name);
+        nameField.beginEdit(entry.name, true);
         expandButton.buttonEl.style.display = "none";
         // only allow editing start and end times if we don't have sub entries
         if (!entry.subEntries) {
@@ -562,10 +562,12 @@ class EditableField {
         return this.label.hidden;
     }
 
-    beginEdit(value: string): void {
+    beginEdit(value: string, focus = false): void {
         this.label.hidden = true;
         this.box.setValue(value);
         this.box.inputEl.show();
+        if (focus)
+            this.box.inputEl.focus();
     }
 
     endEdit(): string {
@@ -585,8 +587,8 @@ class EditableTimestampField extends EditableField {
         this.settings = settings;
     }
 
-    beginEdit(value: string): void {
-        super.beginEdit(value ? formatEditableTimestamp(value, this.settings) : "");
+    beginEdit(value: string, focus = false): void {
+        super.beginEdit(value ? formatEditableTimestamp(value, this.settings) : "", focus);
     }
 
     endEdit(): string {
