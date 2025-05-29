@@ -85,6 +85,28 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
                 });
             });
 
+        new Setting(this.containerEl)
+            .setName("Timestamp Rounding Interval (minutes)")
+            .setDesc("The interval (minutes) that start and end timestamps should be rounded to. Set to 0 for no rounding (default behaviour).")
+            .addText(t => {
+                t.setValue(String(this.plugin.settings.timestampRoundTo));
+                t.onChange(async v => {
+                    this.plugin.settings.timestampRoundTo = v.length ? parseInt(v) : defaultSettings.timestampRoundTo;
+                    await this.plugin.saveSettings();
+                });
+            });
+
+        new Setting(this.containerEl)
+            .setName("Prevent Same Start and End Times")
+            .setDesc("Whether the start and end timestamp are allowed to be the same")
+            .addToggle(t => {
+                t.setValue(this.plugin.settings.timestampPreventEndSameAsStart);
+                t.onChange(async v => {
+                    this.plugin.settings.timestampPreventEndSameAsStart = v;
+                    await this.plugin.saveSettings();
+                });
+            });
+
         this.containerEl.createEl("hr");
         this.containerEl.createEl("p", { text: "Need help using the plugin? Feel free to join the Discord server!" });
         this.containerEl.createEl("a", { href: "https://link.ellpeck.de/discordweb" }).createEl("img", {

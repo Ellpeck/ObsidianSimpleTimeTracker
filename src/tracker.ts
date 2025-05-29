@@ -1,6 +1,8 @@
 import { moment, MarkdownSectionInformation, ButtonComponent, TextComponent, TFile, MarkdownRenderer, Component, MarkdownRenderChild } from "obsidian";
 import { SimpleTimeTrackerSettings } from "./settings";
 import { ConfirmModal } from "./confirm-modal";
+import moment from 'moment';
+import 'moment-round';
 
 export interface Tracker {
     entries: Entry[];
@@ -80,9 +82,9 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getFile: 
         .setTooltip(running ? "End" : "Start")
         .onClick(async () => {
             if (running) {
-                endRunningEntry(tracker);
+                endRunningEntry(tracker, settings);
             } else {
-                startNewEntry(tracker, newSegmentNameBox.getValue());
+                startNewEntry(tracker, newSegmentNameBox.getValue(), settings);
             }
             await saveTracker(tracker, getFile(), getSectionInfo());
         });
@@ -277,7 +279,17 @@ export function formatDuration(totalTime: number, settings: SimpleTimeTrackerSet
 }
 
 
-function startSubEntry(entry: Entry, name: string): void {
+function getRoundedMomentISOString(settings: SimpleTimeTrackerSettings): string {
+    if (settings.timestampRoundTo > 0) {
+        // Return a rounded moment
+        return moment().round(settings.timestampRoundTo, 'minutes').toISOString();
+    } else {
+        // Return a non-rounded moment
+        return moment().toISOString();
+    }
+}   
+
+function startSubEntry(entry: Entry, name: string, settings: SimpleTimeTrackerSettings): void {
     // if this entry is not split yet, we add its time as a sub-entry instead
     if (!entry.subEntries) {
         entry.subEntries = [{ ...entry, name: `Part 1` }];
@@ -287,19 +299,24 @@ function startSubEntry(entry: Entry, name: string): void {
 
     if (!name)
         name = `Part ${entry.subEntries.length + 1}`;
-    entry.subEntries.push({ name: name, startTime: moment().toISOString(), endTime: null, subEntries: undefined });
+    entry.subEntries.push({ name: name, startTime: getRoundedMomentISOString(settings), endTime: null, subEntries: undefined });
 }
 
-function startNewEntry(tracker: Tracker, name: string): void {
+function startNewEntry(tracker: Tracker, name: string, settings: SimpleTimeTrackerSettings): void {
     if (!name)
-        name = `Segment ${tracker.entries.length + 1}`;
-    let entry: Entry = { name: name, startTime: moment().toISOString(), endTime: null, subEntries: undefined };
+        name = `Segment ${tracker.entries.length + 1}`;        
+    let entry: Entry = { name: name, startTime: getRoundedMomentISOString(settings), endTime: null, subEntries: undefined };
     tracker.entries.push(entry);
 }
 
-function endRunningEntry(tracker: Tracker): void {
+function endRunningEntry(tracker: Tracker, settings: SimpleTimeTrackerSettings): void {
     let entry = getRunningEntry(tracker.entries);
-    entry.endTime = moment().toISOString();
+    entry.endTime = getRoundedMomentISOString(settings);
+    if (settings.timestampPreventEndSameAsStart) {
+        if (entry.endTime == entry.startTime) {
+            entry.endTime = moment(entry.endTime).add(15, 'minutes').toISOString();
+        }
+    }
 }
 
 function removeEntry(entries: Entry[], toRemove: Entry): boolean {
@@ -425,7 +442,7 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
         .setTooltip("Continue")
         .setDisabled(trackerRunning)
         .onClick(async () => {
-            startSubEntry(entry, newSegmentNameBox.getValue());
+            startSubEntry(entry, newSegmentNameBox.getValue(), settings);
             await saveTracker(tracker, getFile(), getSectionInfo());
         });
     let editButton = new ButtonComponent(entryButtons)
