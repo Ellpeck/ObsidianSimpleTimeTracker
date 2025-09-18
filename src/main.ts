@@ -1,6 +1,7 @@
 import { MarkdownRenderChild, Plugin, TFile } from "obsidian";
 import { defaultSettings, SimpleTimeTrackerSettings } from "./settings";
 import { SimpleTimeTrackerSettingsTab } from "./settings-tab";
+import { displayStatistics } from "./statistics";
 import { displayTracker, Entry, formatDuration, formatTimestamp, getDuration, getDurationToday, getRunningEntry, getTotalDuration, getTotalDurationToday, isRunning, loadAllTrackers, loadTracker, orderedEntries } from "./tracker";
 
 export default class SimpleTimeTrackerPlugin extends Plugin {
@@ -41,13 +42,31 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
             i.addChild(component);
         });
 
+        this.registerMarkdownCodeBlockProcessor("simple-time-tracker-statistics", (s, e, i) => {
+            e.empty();
+            const component = new MarkdownRenderChild(e);
+
+            displayStatistics(e, this, i.sourcePath);
+
+            i.addChild(component);
+        });
+
         this.addCommand({
             id: `insert`,
             name: `Insert Time Tracker`,
             editorCallback: (e, _) => {
                 e.replaceSelection("```simple-time-tracker\n```\n");
+             }
+        });
+
+        this.addCommand({
+            id: `insert-stats`,
+            name: `Insert Time Tracker Statistics`,
+            editorCallback: (e, _) => {
+                e.replaceSelection("```simple-time-tracker-statistics\n```\n");
             }
         });
+
     }
 
     async loadSettings(): Promise<void> {

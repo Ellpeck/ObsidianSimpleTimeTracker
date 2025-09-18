@@ -84,3 +84,39 @@
 .simple-time-tracker-table tr:hover {
     background-color: var(--background-modifier-hover);
 }
+
+.simple-time-tracker-stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5em;
+}
+
+.simple-time-tracker-stats-header h4 {
+    margin: 0;
+}
+
+.simple-time-tracker-stats-header .clickable-icon {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 5px;
+    color: var(--text-muted);
+}
+
+.simple-time-tracker-stats-header .clickable-icon:hover {
+    background-color: var(--background-modifier-hover);
+    color: var(--text-normal);
+}
+
+/* Spinning animation for loader icon */
+@keyframes simple-time-tracker-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.simple-time-tracker-stats-header .clickable-icon svg.lucide-loader {
+    animation: simple-time-tracker-spin 1s linear infinite;
+}
