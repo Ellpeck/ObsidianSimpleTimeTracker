@@ -1,5 +1,6 @@
 import { MarkdownRenderer, setIcon, TFile } from "obsidian";
 import { DataviewApi } from "obsidian-dataview";
+import moment from "moment";
 import SimpleTimeTrackerPlugin from "./main";
 import { Entry, formatDuration, getDuration, getTotalDuration, isRunning, loadAllTrackers } from "./tracker";
 
@@ -10,21 +11,26 @@ function extractDate(input: string): string | null {
     return match ? match[0] : null;
 }
 
+// Helper to parse target time from HH:mm:ss string to milliseconds
+function parseTargetTime(target: string): number {
+    if (!target) return 0;
+    return moment.duration(target).asMilliseconds();
+}
+
 // Gathers and processes all time tracking entries for a specific day
 async function getWorkingTimeOfDay(dataviewApi: DataviewApi, plugin: SimpleTimeTrackerPlugin, date: string) {
-    const fileTags: string[] = [];
+    const fileCategories: string[] = [];
     const pageNames: string[] = [];
     const entryNames: string[] = [];
     const entryDurations: number[] = [];
     const filteredEntries: Entry[] = [];
 
     // Recursively processes entries and their sub-entries
-    function processEntries(entries: Entry[], page: TFile, isWork: boolean, parentName = '') {
+    function processEntries(entries: Entry[], page: TFile, category: string, parentName = '') {
         entries.forEach(entry => {
-
             if (extractDate(entry.startTime) === date) {
                 filteredEntries.push(entry);
-                fileTags.push(isWork ? "#work" : "other");
+                fileCategories.push(category);
                 pageNames.push(page.basename);
                 const fullName = parentName ? `${parentName} -> ${entry.name}` : entry.name;
                 entryNames.push(fullName);
@@ -33,7 +39,7 @@ async function getWorkingTimeOfDay(dataviewApi: DataviewApi, plugin: SimpleTimeT
 
             if (entry.subEntries) {
                 const newParentName = parentName ? `${parentName} -> ${entry.name}` : entry.name;
-                processEntries(entry.subEntries, page, isWork, newParentName);
+                processEntries(entry.subEntries, page, category, newParentName);
             }
         });
     }
@@ -48,16 +54,24 @@ async function getWorkingTimeOfDay(dataviewApi: DataviewApi, plugin: SimpleTimeT
         }
 
         const trackers = await loadAllTrackers(file.path);
-        const isWork = page.file.tags?.includes("#work");
+        const pageTags = new Set(page.file.tags || []);
+        
+        let category = "Other";
+        for (const cat of plugin.settings.categories) {
+            if (cat.tags.some(tag => pageTags.has(tag))) {
+                category = cat.name;
+                break;
+            }
+        }
 
         for (const { tracker } of trackers) {
-            processEntries(tracker.entries, file, isWork);
+            processEntries(tracker.entries, file, category);
         }
     }
 
     return {
         totalDuration: getTotalDuration(filteredEntries),
-        fileTags,
+        fileCategories,
         pageNames,
         entryNames,
         entryDurations
@@ -110,19 +124,59 @@ export async function displayStatistics(container: HTMLElement, plugin: SimpleTi
             if (workingTime.totalDuration === 0) {
                 dailyReportMd = "_No tracked time found for this day._";
             } else {
-                let workMs = 0;
+                const categoryTotals: { [key: string]: number } = {};
                 workingTime.entryDurations.forEach((dur, i) => {
-                    if (workingTime.fileTags[i] === "#work") workMs += dur;
+                    const category = workingTime.fileCategories[i];
+                    if (!categoryTotals[category]) {
+                        categoryTotals[category] = 0;
+                    }
+                    categoryTotals[category] += dur;
                 });
-                const otherMs = workingTime.totalDuration - workMs;
 
-                const totalsTable = `| Category | Duration |\n|:---|:---|\n| **Work** | ${formatDuration(workMs, plugin.settings)} |\n| **Other** | ${formatDuration(otherMs, plugin.settings)} |\n| **Total** | **${formatDuration(workingTime.totalDuration, plugin.settings)}** |`;
-                let breakdownTable = `| Type | Entry | Duration |\n|:---|:---|:---|\n`;
-                workingTime.fileTags.forEach((tag, i) => {
-                    const type = tag === "#work" ? "Work" : "Other";
+                const showTargetColumns = plugin.settings.categories.some(c => c.target);
+                
+                let totalsTable = `| Category | Duration |`;
+                if (showTargetColumns) {
+                    totalsTable += ` Remaining | Overtime |\n|:---|:---|:---|:---|\n`;
+                } else {
+                    totalsTable += `\n|:---|:---|\n`;
+                }
+                
+                for (const categoryName in categoryTotals) {
+                    const category = plugin.settings.categories.find(c => c.name === categoryName);
+                    const trackedDuration = categoryTotals[categoryName];
+                    let remainingStr = "";
+                    let overtimeStr = "";
+
+                    if (category && category.target) {
+                        const targetMs = parseTargetTime(category.target);
+                        if (targetMs > 0) {
+                            const diffMs = trackedDuration - targetMs;
+                            if (diffMs < 0) {
+                                remainingStr = formatDuration(-diffMs, plugin.settings);
+                            } else {
+                                overtimeStr = formatDuration(diffMs, plugin.settings);
+                            }
+                        }
+                    }
+                    
+                    totalsTable += `| **${categoryName}** | ${formatDuration(trackedDuration, plugin.settings)} |`;
+                    if (showTargetColumns) {
+                        totalsTable += ` ${remainingStr} | ${overtimeStr} |\n`;
+                    } else {
+                        totalsTable += `\n`;
+                    }
+                }
+                totalsTable += `| **Total** | **${formatDuration(workingTime.totalDuration, plugin.settings)}** |`;
+                if (showTargetColumns) {
+                    totalsTable += ` | |`;
+                }
+
+                let breakdownTable = `| Category | Entry | Duration |\n|:---|:---|:---|\n`;
+                workingTime.fileCategories.forEach((category, i) => {
                     const entryKey = `[[${workingTime.pageNames[i]}]] - ${workingTime.entryNames[i]}`;
                     const durStr = formatDuration(workingTime.entryDurations[i], plugin.settings);
-                    breakdownTable += `| ${type} | ${entryKey} | ${durStr} |\n`;
+                    breakdownTable += `| ${category} | ${entryKey} | ${durStr} |\n`;
                 });
                 dailyReportMd = `#### Totals\n\n${totalsTable}\n\n#### Entries Breakdown\n\n${breakdownTable}`;
             }
@@ -161,5 +215,3 @@ export async function displayStatistics(container: HTMLElement, plugin: SimpleTi
 
     renderReport(contentContainer);
 }
-
-

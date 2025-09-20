@@ -15,6 +15,49 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
         this.containerEl.empty();
         this.containerEl.createEl("h2", { text: "Super Simple Time Tracker Settings" });
 
+        this.containerEl.createEl("h5", { text: "Statistic Categories" });
+
+        this.plugin.settings.categories.forEach((category, index) => {
+            const setting = new Setting(this.containerEl)
+                .addText(text => text
+                    .setPlaceholder("Category name")
+                    .setValue(category.name)
+                    .onChange(async (value) => {
+                        category.name = value;
+                        await this.plugin.saveSettings();
+                    }))
+                .addText(text => text
+                    .setPlaceholder("Tags (comma-separated)")
+                    .setValue(category.tags.join(", "))
+                    .onChange(async (value) => {
+                        category.tags = value.split(",").map(tag => tag.trim()).filter(tag => tag.length > 0);
+                        await this.plugin.saveSettings();
+                    }))
+                .addText(text => text
+                    .setPlaceholder("Target time (HH:mm:ss)")
+                    .setValue(category.target)
+                    .onChange(async (value) => {
+                        category.target = value ? value : "00:00:00"
+                        await this.plugin.saveSettings();
+                }))
+                .addButton(button => button
+                    .setButtonText("Remove")
+                    .onClick(async () => {
+                        this.plugin.settings.categories.splice(index, 1);
+                        await this.plugin.saveSettings();
+                        this.display();
+                    }));
+        });
+
+        new Setting(this.containerEl)
+            .addButton(button => button
+                .setButtonText("Add New Category")
+                .onClick(async () => {
+                    this.plugin.settings.categories.push({ name: "", tags: [] });
+                    await this.plugin.saveSettings();
+                    this.display();
+                }));
+
         new Setting(this.containerEl)
             .setName("Timestamp Display Format")
             .setDesc(createFragment(f => {
