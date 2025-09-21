@@ -1,7 +1,7 @@
 import { MarkdownRenderChild, Plugin, TFile } from "obsidian";
 import { defaultSettings, SimpleTimeTrackerSettings } from "./settings";
 import { SimpleTimeTrackerSettingsTab } from "./settings-tab";
-import { displayStatistics } from "./statistics";
+import { displayStatisticsDay, displayStatisticsMonth } from "./statistics";
 import { displayTracker, Entry, formatDuration, formatTimestamp, getDuration, getDurationToday, getRunningEntry, getTotalDuration, getTotalDurationToday, isRunning, loadAllTrackers, loadTracker, orderedEntries } from "./tracker";
 
 export default class SimpleTimeTrackerPlugin extends Plugin {
@@ -42,11 +42,20 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
             i.addChild(component);
         });
 
-        this.registerMarkdownCodeBlockProcessor("simple-time-tracker-statistics", (s, e, i) => {
+        this.registerMarkdownCodeBlockProcessor("simple-time-tracker-statistics-day", (s, e, i) => {
             e.empty();
             const component = new MarkdownRenderChild(e);
 
-            displayStatistics(e, this, i.sourcePath);
+            displayStatisticsDay(e, this, i.sourcePath, s);
+
+            i.addChild(component);
+        });
+
+         this.registerMarkdownCodeBlockProcessor("simple-time-tracker-statistics-month", (s, e, i) => {
+            e.empty();
+            const component = new MarkdownRenderChild(e);
+
+            displayStatisticsMonth(e, this, i.sourcePath, s);
 
             i.addChild(component);
         });
@@ -60,12 +69,28 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
         });
 
         this.addCommand({
-            id: `insert-stats`,
-            name: `Insert Time Tracker Statistics`,
+            id: `insert-stats-day`,
+            name: `Insert Time Tracker Statistics Day`,
             editorCallback: (e, _) => {
-                e.replaceSelection("```simple-time-tracker-statistics\n```\n");
+                e.replaceSelection("```simple-time-tracker-statistics-day\n```\n");
             }
         });
+
+        this.addCommand({
+            id: `insert-stats-month`,
+            name: `Insert Time Tracker Statistics Month`,
+            editorCallback: (e, _) => {
+                const block = `\`\`\`simple-time-tracker-statistics-month
+deviation = 0
+vacationDays = []
+sickDays = []
+daysOff = []
+\`\`\`
+`;
+                e.replaceSelection(block);
+            }
+        });
+
 
     }
 

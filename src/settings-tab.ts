@@ -15,7 +15,7 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
         this.containerEl.empty();
         this.containerEl.createEl("h2", { text: "Super Simple Time Tracker Settings" });
 
-        this.containerEl.createEl("h5", { text: "Statistic Categories" });
+        this.containerEl.createEl("h5", { text: "Statistics" });
 
         this.plugin.settings.categories.forEach((category, index) => {
             const setting = new Setting(this.containerEl)
@@ -57,6 +57,22 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
                     await this.plugin.saveSettings();
                     this.display();
                 }));
+
+        new Setting(this.containerEl)
+            .setName('First Day of Week')
+            .setDesc('Set the first day of the week for statistics calculation.')
+            .addDropdown(dropdown => {
+                dropdown
+                    .addOption('0', 'Sunday')
+                    .addOption('1', 'Monday')
+                    .setValue(String(this.plugin.settings.firstDayOfWeek))
+                    .onChange(async (value) => {
+                        this.plugin.settings.firstDayOfWeek = Number(value);
+                        await this.plugin.saveSettings();
+                    });
+            });
+
+        this.containerEl.createEl("h5", { text: "General" });
 
         new Setting(this.containerEl)
             .setName("Timestamp Display Format")

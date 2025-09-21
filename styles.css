@@ -110,13 +110,6 @@
     color: var(--text-normal);
 }
 
-/* Spinning animation for loader icon */
-@keyframes simple-time-tracker-spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 .simple-time-tracker-stats-header .clickable-icon svg.lucide-loader {
     animation: simple-time-tracker-spin 1s linear infinite;
 }

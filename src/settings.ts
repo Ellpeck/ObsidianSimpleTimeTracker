@@ -12,6 +12,7 @@ export const defaultSettings: SimpleTimeTrackerSettings = {
     reverseSegmentOrder: false,
     timestampDurations: false,
     showToday: false,
+    firstDayOfWeek: 1, //Monday
     categories : [
         {
             name: "Work",
@@ -35,5 +36,6 @@ export interface SimpleTimeTrackerSettings {
     reverseSegmentOrder: boolean;
     timestampDurations: boolean;
     showToday: boolean;
+    firstDayOfWeek: number;
     categories: Category[];
 }
