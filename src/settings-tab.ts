@@ -86,6 +86,17 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
                 });
             }));
 
+        group.addSetting(s => s
+            .setName("Use Monospaced Font for Times")
+            .setDesc("Whether your configured monospaced font should be used for the times in the title, causing them to jump around less while counting up.")
+            .addToggle(t => {
+                t.setValue(this.plugin.settings.useMonospacedFont);
+                t.onChange(async v => {
+                    this.plugin.settings.useMonospacedFont = v;
+                    await this.plugin.saveSettings();
+                });
+            }));
+
         this.containerEl.createEl("hr");
         this.containerEl.createEl("p", { text: "Need help using the plugin? Feel free to join the Discord server!" });
         this.containerEl.createEl("a", { href: "https://link.ellpeck.de/discordweb" }).createEl("img", {

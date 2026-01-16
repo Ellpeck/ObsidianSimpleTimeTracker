@@ -93,18 +93,24 @@ export function displayTracker(app: App, tracker: Tracker, element: HTMLElement,
     newSegmentNameBox.inputEl.addClass("simple-time-tracker-txt");
 
     // add timers
+    let timeStyle: DomElementInfo = {
+        cls: "simple-time-tracker-timer-time",
+        attr: {
+            style: settings.useMonospacedFont ? "font-family: var(--font-monospace);" : ""
+        }
+    };
     let timer = element.createDiv({ cls: "simple-time-tracker-timers" });
     let currentDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
-    let current = currentDiv.createEl("span", { cls: "simple-time-tracker-timer-time" });
+    let current = currentDiv.createEl("span", timeStyle);
     currentDiv.createEl("span", { text: "Current" });
     let totalDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
-    let total = totalDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "0s" });
+    let total = totalDiv.createEl("span", timeStyle);
     totalDiv.createEl("span", { text: "Total" });
 
     let totalToday: HTMLElement;
     if (settings.showToday) {
         let totalTodayDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
-        totalToday = totalTodayDiv.createEl("span", { cls: "simple-time-tracker-timer-time", text: "0s" });
+        totalToday = totalTodayDiv.createEl("span", timeStyle);
         totalTodayDiv.createEl("span", { text: "Today" });
     }
 
