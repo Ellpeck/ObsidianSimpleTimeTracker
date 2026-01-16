@@ -1,6 +1,6 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import {App, PluginSettingTab, Setting, SettingGroup} from "obsidian";
 import SimpleTimeTrackerPlugin from "./main";
-import { defaultSettings } from "./settings";
+import {defaultSettings} from "./settings";
 
 export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
 
@@ -9,13 +9,14 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
     constructor(app: App, plugin: SimpleTimeTrackerPlugin) {
         super(app, plugin);
         this.plugin = plugin;
+        this.icon = "timer";
     }
 
     display(): void {
         this.containerEl.empty();
-        this.containerEl.createEl("h2", { text: "Super Simple Time Tracker Settings" });
 
-        new Setting(this.containerEl)
+        let group = new SettingGroup(this.containerEl);
+        group.addSetting(s => s
             .setName("Timestamp Display Format")
             .setDesc(createFragment(f => {
                 f.createSpan({ text: "The way that timestamps in time tracker tables should be displayed. Uses " });
@@ -28,9 +29,9 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
                     this.plugin.settings.timestampFormat = v.length ? v : defaultSettings.timestampFormat;
                     await this.plugin.saveSettings();
                 });
-            });
+            }));
 
-        new Setting(this.containerEl)
+        group.addSetting(s => s
             .setName("CSV Delimiter")
             .setDesc("The delimiter character that should be used when copying a tracker table as CSV. For example, some languages use a semicolon instead of a comma.")
             .addText(t => {
@@ -39,9 +40,9 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
                     this.plugin.settings.csvDelimiter = v.length ? v : defaultSettings.csvDelimiter;
                     await this.plugin.saveSettings();
                 });
-            });
+            }));
 
-        new Setting(this.containerEl)
+        group.addSetting(s => s
             .setName("Fine-Grained Durations")
             .setDesc("Whether durations should include days, months and years. If this is disabled, additional time units will be displayed as part of the hours.")
             .addToggle(t => {
@@ -50,9 +51,9 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
                     this.plugin.settings.fineGrainedDurations = v;
                     await this.plugin.saveSettings();
                 });
-            });
+            }));
 
-        new Setting(this.containerEl)
+        group.addSetting(s => s
             .setName("Timestamp Durations")
             .setDesc("Whether durations should be displayed in a timestamp format (12:15:01) rather than the default duration format (12h 15m 1s).")
             .addToggle(t => {
@@ -61,9 +62,9 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
                     this.plugin.settings.timestampDurations = v;
                     await this.plugin.saveSettings();
                 });
-            });
+            }));
 
-        new Setting(this.containerEl)
+        group.addSetting(s => s
             .setName("Display Segments in Reverse Order")
             .setDesc("Whether older tracker segments should be displayed towards the bottom of the tracker, rather than the top.")
             .addToggle(t => {
@@ -72,18 +73,18 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
                     this.plugin.settings.reverseSegmentOrder = v;
                     await this.plugin.saveSettings();
                 });
-            });
+            }));
 
-        new Setting(this.containerEl)
-            .setName('Show Total Today')
-            .setDesc('Whether the total time spent today should be displayed in the tracker table.')
+        group.addSetting(s => s
+            .setName("Show Total Today")
+            .setDesc("Whether the total time spent today should be displayed in the tracker table.")
             .addToggle(t => {
                 t.setValue(this.plugin.settings.showToday);
                 t.onChange(async v => {
                     this.plugin.settings.showToday = v;
                     await this.plugin.saveSettings();
                 });
-            });
+            }));
 
         this.containerEl.createEl("hr");
         this.containerEl.createEl("p", { text: "Need help using the plugin? Feel free to join the Discord server!" });

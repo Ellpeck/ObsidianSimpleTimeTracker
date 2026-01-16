@@ -2,7 +2,7 @@
     "id": "simple-time-tracker",
     "name": "Super Simple Time Tracker",
     "version": "1.1.0",
-    "minAppVersion": "1.2.8",
+    "minAppVersion": "1.11.0",
     "description": "Multi-purpose time trackers for your notes!",
     "author": "Ellpeck",
     "authorUrl": "https://ellpeck.de",
