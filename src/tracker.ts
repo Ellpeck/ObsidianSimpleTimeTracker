@@ -425,12 +425,14 @@ function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HT
     entryButtons.addClass("simple-time-tracker-table-buttons");
     new ButtonComponent(entryButtons)
         .setClass("clickable-icon")
-        .setIcon(`lucide-play`)
-        .setTooltip("Continue")
-        .setDisabled(trackerRunning)
+        .setIcon(`lucide-${entryRunning ? "square" : "play"}`)
+        .setTooltip(entryRunning ? "End" : "Continue")
+        .setDisabled(trackerRunning && !entryRunning)
         .onClick(async () => {
-            // if we're using a template version of a tracker without a start time, start now
-            if (!entry.startTime) {
+            if (entryRunning) {
+                endRunningEntry(tracker);
+            } else if (!entry.startTime) {
+                // if we're using a template version of a tracker without a start time, start now
                 entry.startTime = moment().toISOString();
             } else {
                 startSubEntry(entry, newSegmentNameBox.getValue());
