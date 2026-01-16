@@ -1,6 +1,6 @@
-import { moment, MarkdownSectionInformation, ButtonComponent, TextComponent, TFile, MarkdownRenderer, Component, MarkdownRenderChild } from "obsidian";
-import { SimpleTimeTrackerSettings } from "./settings";
-import { ConfirmModal } from "./confirm-modal";
+import {moment, MarkdownSectionInformation, ButtonComponent, TextComponent, TFile, MarkdownRenderer, Component, MarkdownRenderChild, App} from "obsidian";
+import {SimpleTimeTrackerSettings} from "./settings";
+import {ConfirmModal} from "./confirm-modal";
 
 export interface Tracker {
     entries: Entry[];
@@ -14,7 +14,7 @@ export interface Entry {
     collapsed?: boolean;
 }
 
-export async function saveTracker(tracker: Tracker, fileName: string, section: MarkdownSectionInformation): Promise<void> {
+export async function saveTracker(app: App, tracker: Tracker, fileName: string, section: MarkdownSectionInformation): Promise<void> {
     let file = app.vault.getAbstractFileByPath(fileName) as TFile;
     if (!file)
         return;
@@ -43,7 +43,7 @@ export function loadTracker(json: string): Tracker {
     return { entries: [] };
 }
 
-export async function loadAllTrackers(fileName: string): Promise<{ section: MarkdownSectionInformation, tracker: Tracker }[]> {
+export async function loadAllTrackers(app: App, fileName: string): Promise<{ section: MarkdownSectionInformation, tracker: Tracker }[]> {
     let file = app.vault.getAbstractFileByPath(fileName);
     let content = (await app.vault.cachedRead(file as TFile)).split("\n");
 
@@ -69,7 +69,7 @@ export async function loadAllTrackers(fileName: string): Promise<{ section: Mark
 
 type GetFile = () => string;
 
-export function displayTracker(tracker: Tracker, element: HTMLElement, getFile: GetFile, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, component: MarkdownRenderChild): void {
+export function displayTracker(app: App, tracker: Tracker, element: HTMLElement, getFile: GetFile, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, component: MarkdownRenderChild): void {
 
     element.addClass("simple-time-tracker-container");
     // add start/stop controls
@@ -84,7 +84,7 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getFile: 
             } else {
                 startNewEntry(tracker, newSegmentNameBox.getValue());
             }
-            await saveTracker(tracker, getFile(), getSectionInfo());
+            await saveTracker(app, tracker, getFile(), getSectionInfo());
         });
     btn.buttonEl.addClass("simple-time-tracker-btn");
     let newSegmentNameBox = new TextComponent(element)
@@ -119,7 +119,7 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getFile: 
             createEl("th"));
 
         for (let entry of orderedEntries(tracker.entries, settings))
-            addEditableTableRow(tracker, entry, table, newSegmentNameBox, running, getFile, getSectionInfo, settings, 0, component);
+            addEditableTableRow(app, tracker, entry, table, newSegmentNameBox, running, getFile, getSectionInfo, settings, 0, component);
 
         // add copy buttons
         let buttons = element.createEl("div", { cls: "simple-time-tracker-bottom" });
@@ -146,6 +146,8 @@ export function displayTracker(tracker: Tracker, element: HTMLElement, getFile: 
 export function getDuration(entry: Entry): number {
     if (entry.subEntries) {
         return getTotalDuration(entry.subEntries);
+    } else if (!entry.startTime) {
+        return 0;
     } else {
         let endTime = entry.endTime ? moment(entry.endTime) : moment();
         return endTime.diff(moment(entry.startTime));
@@ -155,6 +157,8 @@ export function getDuration(entry: Entry): number {
 export function getDurationToday(entry: Entry): number {
     if (entry.subEntries) {
         return getTotalDurationToday(entry.subEntries);
+    } else if (!entry.startTime) {
+        return 0;
     } else {
         let today = moment().startOf("day");
         let endTime = entry.endTime ? moment(entry.endTime) : moment();
@@ -197,7 +201,7 @@ export function getRunningEntry(entries: Entry[]): Entry {
             let running = getRunningEntry(entry.subEntries);
             if (running)
                 return running;
-        } else {
+        } else if (entry.startTime) {
             // if this entry has no sub entries and no end time, it's running
             if (!entry.endTime)
                 return entry;
@@ -390,7 +394,7 @@ function createTableSection(entry: Entry, settings: SimpleTimeTrackerSettings, i
     return ret;
 }
 
-function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, trackerRunning: boolean, getFile: GetFile, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number, component: MarkdownRenderChild): void {
+function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, trackerRunning: boolean, getFile: GetFile, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number, component: MarkdownRenderChild): void {
     let entryRunning = getRunningEntry(tracker.entries) == entry;
     let row = table.createEl("tr");
 
@@ -400,7 +404,7 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
 
     row.createEl("td", { text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : "" });
 
-    renderNameAsMarkdown(nameField.label, getFile, component);
+    renderNameAsMarkdown(app, nameField.label, getFile, component);
 
     let expandButton = new ButtonComponent(nameField.label)
         .setClass("clickable-icon")
@@ -412,7 +416,7 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
             } else {
                 entry.collapsed = true;
             }
-            await saveTracker(tracker, getFile(), getSectionInfo());
+            await saveTracker(app, tracker, getFile(), getSectionInfo());
         });
     if (!entry.subEntries)
         expandButton.buttonEl.style.visibility = "hidden";
@@ -425,8 +429,13 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
         .setTooltip("Continue")
         .setDisabled(trackerRunning)
         .onClick(async () => {
-            startSubEntry(entry, newSegmentNameBox.getValue());
-            await saveTracker(tracker, getFile(), getSectionInfo());
+            // if we're using a template version of a tracker without a start time, start now
+            if (!entry.startTime) {
+                entry.startTime = moment().toISOString();
+            } else {
+                startSubEntry(entry, newSegmentNameBox.getValue());
+            }
+            await saveTracker(app, tracker, getFile(), getSectionInfo());
         });
     let editButton = new ButtonComponent(entryButtons)
         .setClass("clickable-icon")
@@ -460,9 +469,9 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
             endField.endEdit();
             entry.endTime = endField.getTimestamp();
         }
-        await saveTracker(tracker, getFile(), getSectionInfo());
+        await saveTracker(app, tracker, getFile(), getSectionInfo());
         editButton.setIcon("lucide-pencil");
-        renderNameAsMarkdown(nameField.label, getFile, component);
+        renderNameAsMarkdown(app, nameField.label, getFile, component);
     }
 
     function startEditing() {
@@ -499,32 +508,32 @@ function addEditableTableRow(tracker: Tracker, entry: Entry, table: HTMLTableEle
         .setDisabled(entryRunning)
         .onClick(async () => {
 
-            const confirmed = await showConfirm("Are you sure you want to delete this entry?");
+            const confirmed = await showConfirm(app, "Are you sure you want to delete this entry?");
 
             if (!confirmed) {
                 return;
             }
 
             removeEntry(tracker.entries, entry);
-            await saveTracker(tracker, getFile(), getSectionInfo());
+            await saveTracker(app, tracker, getFile(), getSectionInfo());
         });
 
     if (entry.subEntries && !entry.collapsed) {
         for (let sub of orderedEntries(entry.subEntries, settings))
-            addEditableTableRow(tracker, sub, table, newSegmentNameBox, trackerRunning, getFile, getSectionInfo, settings, indent + 1, component);
+            addEditableTableRow(app, tracker, sub, table, newSegmentNameBox, trackerRunning, getFile, getSectionInfo, settings, indent + 1, component);
     }
 }
 
-function showConfirm(message: string): Promise<boolean> {
+function showConfirm(app: App, message: string): Promise<boolean> {
     return new Promise((resolve) => {
         const modal = new ConfirmModal(app, message, resolve);
         modal.open();
     });
 }
 
-function renderNameAsMarkdown(label: HTMLSpanElement, getFile: GetFile, component: Component): void {
+function renderNameAsMarkdown(app: App, label: HTMLSpanElement, getFile: GetFile, component: Component): void {
     // we don't have to wait here since async code only occurs when a file needs to be loaded (like a linked image)
-    void MarkdownRenderer.renderMarkdown(label.innerHTML, label, getFile(), component);
+    void MarkdownRenderer.render(app, label.innerHTML, label, getFile(), component);
     // rendering wraps it in a paragraph
     label.innerHTML = label.querySelector("p").innerHTML;
 }
