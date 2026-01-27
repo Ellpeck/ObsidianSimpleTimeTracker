@@ -1,14 +1,4 @@
-import {
-    moment,
-    MarkdownSectionInformation,
-    ButtonComponent,
-    TextComponent,
-    TFile,
-    MarkdownRenderer,
-    Component,
-    MarkdownRenderChild,
-    App
-} from "obsidian";
+import {moment, MarkdownSectionInformation, ButtonComponent, TextComponent, TFile, MarkdownRenderer, Component, MarkdownRenderChild, App} from "obsidian";
 import {SimpleTimeTrackerSettings} from "./settings";
 import {ConfirmModal} from "./confirm-modal";
 
@@ -53,10 +43,7 @@ export function loadTracker(json: string): Tracker {
     return { entries: [] };
 }
 
-export async function loadAllTrackers(app: App, fileName: string): Promise<{
-    section: MarkdownSectionInformation,
-    tracker: Tracker
-}[]> {
+export async function loadAllTrackers(app: App, fileName: string): Promise<{ section: MarkdownSectionInformation, tracker: Tracker }[]> {
     let file = app.vault.getAbstractFileByPath(fileName);
     let content = (await app.vault.cachedRead(file as TFile)).split("\n");
 
