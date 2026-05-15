@@ -238,11 +238,15 @@ export function createMarkdownTable(tracker: Tracker, settings: SimpleTimeTracke
     return ret;
 }
 
+function createCsvCell(content: string): string {
+    return `"${content.replace(/"/g, '""')}"`;
+}
+
 export function createCsv(tracker: Tracker, settings: SimpleTimeTrackerSettings): string {
     let ret = "";
     for (let entry of orderedEntries(tracker.entries, settings)) {
         for (let row of createTableSection(entry, settings))
-            ret += row.join(settings.csvDelimiter) + "\n";
+            ret += row.map(createCsvCell).join(settings.csvDelimiter) + "\n";
     }
     return ret;
 }
