@@ -547,7 +547,12 @@ function renderNameAsMarkdown(app: App, label: HTMLSpanElement, getFile: GetFile
     // we don't have to wait here since async code only occurs when a file needs to be loaded (like a linked image)
     void MarkdownRenderer.render(app, label.innerHTML, label, getFile(), component);
     // rendering wraps it in a paragraph
-    label.replaceChildren(...Array.from(label.querySelector("p").children));
+    let p = label.querySelector("p");
+    if (p.children.length > 0) {
+        label.replaceChildren(...Array.from(p.children));
+    } else {
+        label.setText(p.textContent);
+    }
 }
 
 
