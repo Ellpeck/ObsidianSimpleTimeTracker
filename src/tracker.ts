@@ -40,7 +40,7 @@ export function loadTracker(json: string): Tracker {
             console.log(`Failed to parse Tracker from ${json}`);
         }
     }
-    return {entries: []};
+    return { entries: [] };
 }
 
 export async function loadAllTrackers(app: App, fileName: string): Promise<{ section: MarkdownSectionInformation, tracker: Tracker }[]> {
@@ -52,12 +52,12 @@ export async function loadAllTrackers(app: App, fileName: string): Promise<{ sec
     for (let i = 0; i < content.length; i++) {
         let line = content[i];
         if (line.trimEnd() == "```simple-time-tracker") {
-            curr = {lineStart: i + 1, text: ""};
+            curr = { lineStart: i + 1, text: "" };
         } else if (curr) {
             if (line.trimEnd() == "```") {
                 curr.lineEnd = i - 1;
                 let tracker = loadTracker(curr.text);
-                trackers.push({section: curr as MarkdownSectionInformation, tracker: tracker});
+                trackers.push({ section: curr as MarkdownSectionInformation, tracker: tracker });
                 curr = undefined;
             } else {
                 curr.text += `${line}\n`;
@@ -99,36 +99,36 @@ export function displayTracker(app: App, tracker: Tracker, element: HTMLElement,
             style: settings.useMonospacedFont ? "font-family: var(--font-monospace);" : ""
         }
     };
-    let timer = element.createDiv({cls: "simple-time-tracker-timers"});
-    let currentDiv = timer.createEl("div", {cls: "simple-time-tracker-timer"});
+    let timer = element.createDiv({ cls: "simple-time-tracker-timers" });
+    let currentDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
     let current = currentDiv.createEl("span", timeStyle);
-    currentDiv.createEl("span", {text: "Current"});
-    let totalDiv = timer.createEl("div", {cls: "simple-time-tracker-timer"});
+    currentDiv.createEl("span", { text: "Current" });
+    let totalDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
     let total = totalDiv.createEl("span", timeStyle);
-    totalDiv.createEl("span", {text: "Total"});
+    totalDiv.createEl("span", { text: "Total" });
 
     let totalToday: HTMLElement;
     if (settings.showToday) {
-        let totalTodayDiv = timer.createEl("div", {cls: "simple-time-tracker-timer"});
+        let totalTodayDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
         totalToday = totalTodayDiv.createEl("span", timeStyle);
-        totalTodayDiv.createEl("span", {text: "Today"});
+        totalTodayDiv.createEl("span", { text: "Today" });
     }
 
     if (tracker.entries.length > 0) {
         // add table
-        let table = element.createEl("table", {cls: "simple-time-tracker-table"});
+        let table = element.createEl("table", { cls: "simple-time-tracker-table" });
         table.createEl("tr").append(
-            createEl("th", {text: "Segment"}),
-            createEl("th", {text: "Start time"}),
-            createEl("th", {text: "End time"}),
-            createEl("th", {text: "Duration"}),
+            createEl("th", { text: "Segment" }),
+            createEl("th", { text: "Start time" }),
+            createEl("th", { text: "End time" }),
+            createEl("th", { text: "Duration" }),
             createEl("th"));
 
         for (let entry of orderedEntries(tracker.entries, settings))
             addEditableTableRow(app, tracker, entry, table, newSegmentNameBox, running, getFile, getSectionInfo, settings, 0, component);
 
         // add copy buttons
-        let buttons = element.createEl("div", {cls: "simple-time-tracker-bottom"});
+        let buttons = element.createEl("div", { cls: "simple-time-tracker-bottom" });
         new ButtonComponent(buttons)
             .setButtonText("Copy as table")
             .onClick(() => navigator.clipboard.writeText(createMarkdownTable(tracker, settings)));
@@ -294,20 +294,20 @@ export function formatDuration(totalTime: number, settings: SimpleTimeTrackerSet
 function startSubEntry(entry: Entry, name: string): void {
     // if this entry is not split yet, we add its time as a sub-entry instead
     if (!entry.subEntries) {
-        entry.subEntries = [{...entry, name: `Part 1`}];
+        entry.subEntries = [{ ...entry, name: `Part 1` }];
         entry.startTime = null;
         entry.endTime = null;
     }
 
     if (!name)
         name = `Part ${entry.subEntries.length + 1}`;
-    entry.subEntries.push({name: name, startTime: moment().toISOString(), endTime: null, subEntries: undefined});
+    entry.subEntries.push({ name: name, startTime: moment().toISOString(), endTime: null, subEntries: undefined });
 }
 
 function startNewEntry(tracker: Tracker, name: string): void {
     if (!name)
         name = `Segment ${tracker.entries.length + 1}`;
-    let entry: Entry = {name: name, startTime: moment().toISOString(), endTime: null, subEntries: undefined};
+    let entry: Entry = { name: name, startTime: moment().toISOString(), endTime: null, subEntries: undefined };
     tracker.entries.push(entry);
 }
 
@@ -412,7 +412,7 @@ function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HT
     let startField = new EditableTimestampField(row, (entry.startTime), settings);
     let endField = new EditableTimestampField(row, (entry.endTime), settings);
 
-    row.createEl("td", {text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : ""});
+    row.createEl("td", { text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : "" });
 
     renderNameAsMarkdown(app, nameField.label, getFile, component);
 
@@ -561,7 +561,7 @@ class EditableField {
 
     constructor(row: HTMLTableRowElement, indent: number, value: string) {
         this.cell = row.createEl("td");
-        this.label = this.cell.createEl("span", {text: value});
+        this.label = this.cell.createEl("span", { text: value });
         this.label.style.marginLeft = `${indent}em`;
         this.box = new TextComponent(this.cell).setValue(value);
         this.box.inputEl.addClass("simple-time-tracker-input");
