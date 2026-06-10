@@ -12,14 +12,14 @@ Need help using the plugin? Feel free to join the Discord server!
 
 [![Join the Discord server](https://ellpeck.de/res/discord-wide.png)](https://link.ellpeck.de/discordweb)
 
-## 🔍 Tracker Data in Dataview
-Super Simple Time Tracker has a public API that can be used with [Dataview](https://blacksmithgu.github.io/obsidian-dataview/), specifically [DataviewJS](https://blacksmithgu.github.io/obsidian-dataview/api/intro/), which can be accessed using the following code:
+## 🔍 JavaScript API
+Super Simple Time Tracker has a public API that can be used with plugins like [Dataview](https://blacksmithgu.github.io/obsidian-dataview/). The API can be accessed using the following JavaScript code:
 
 ```js
 dv.app.plugins.plugins["simple-time-tracker"].api;
 ```
 
-The following is a short example that uses DataviewJS to load all trackers in the vault and print the total duration of each tracker. You can also find this example in action [in the test vault](https://github.com/Ellpeck/ObsidianSimpleTimeTracker/blob/master/test-vault/dataview-test.md?plain=1).
+The following is a short example that uses [DataviewJS](https://blacksmithgu.github.io/obsidian-dataview/api/intro/) to load all trackers in the vault and print the total duration of each tracker. You can also find this example in action [in the test vault](https://github.com/Ellpeck/ObsidianSimpleTimeTracker/blob/master/test-vault/dataview-test.md?plain=1).
 
 ```js
 // get the time tracker plugin api instance
@@ -41,6 +41,10 @@ for (let page of dv.pages()) {
 ```
 
 A full list of the functions exposed through the API can be found [in the code](https://github.com/Ellpeck/ObsidianSimpleTimeTracker/blob/master/src/main.ts#L8-L16). Proper documentation for the API will be added in the future.
+
+# 🧑‍🤝‍🧑 Companion Plugins
+- [Time Tracker Statistics](https://community.obsidian.md/plugins/time-tracker-statistics) is a companion plugin by [the-quotient](https://github.com/the-quotient) which provides daily and monthly statistics views across your whole vault based on your Super Simple Time Tracker data.
+- [Dataview](https://blacksmithgu.github.io/obsidian-dataview/) and its JavaScript API [DataviewJS](https://blacksmithgu.github.io/obsidian-dataview/api/intro/) can be used to access the Super Simple Time Tracker [API](#-javascript-api), which allows extracting and modifying tracker data through code.
 
 # 👀 What it does
 A time tracker is really just a special code block that stores information about the times you pressed the Start and End buttons on. Since time is tracked solely through timestamps, you can switch notes, close Obsidian or even shut down your device completely while the tracker is running! Once you come back, your time tracker will still be running.
