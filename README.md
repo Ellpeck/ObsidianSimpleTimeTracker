@@ -13,10 +13,10 @@ Need help using the plugin? Feel free to join the Discord server!
 [![Join the Discord server](https://ellpeck.de/res/discord-wide.png)](https://link.ellpeck.de/discordweb)
 
 ## 🔍 JavaScript API
-Super Simple Time Tracker has a public API that can be used with plugins like [Dataview](https://blacksmithgu.github.io/obsidian-dataview/). The API can be accessed using the following JavaScript code:
+Super Simple Time Tracker has a public API that can be used with plugins like [Dataview](https://blacksmithgu.github.io/obsidian-dataview/). The API can be accessed using the following JavaScript code based on Obsidian's `app` object:
 
 ```js
-dv.app.plugins.plugins["simple-time-tracker"].api;
+app.plugins.plugins["simple-time-tracker"].api;
 ```
 
 The following is a short example that uses [DataviewJS](https://blacksmithgu.github.io/obsidian-dataview/api/intro/) to load all trackers in the vault and print the total duration of each tracker. You can also find this example in action [in the test vault](https://github.com/Ellpeck/ObsidianSimpleTimeTracker/blob/master/test-vault/dataview-test.md?plain=1).
