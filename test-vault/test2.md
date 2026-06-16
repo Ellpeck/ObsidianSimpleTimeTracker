@@ -14,3 +14,10 @@ test
 ```simple-time-tracker
 {"entries":[{"name":"Segment 1","startTime":"2026-01-16T14:23:40.894Z","endTime":null}]}
 ```
+
+
+```simple-time-tracker
+{"entries":[{"name":"Segment 1","startTime":"2026-06-15T14:23:40.000Z","endTime":"2026-06-15T20:36:58.000Z"}]}
+```
+
+
