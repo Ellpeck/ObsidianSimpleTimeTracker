@@ -8,8 +8,8 @@ export interface Tracker {
 
 export interface Entry {
     name: string;
-    startTime: string;
-    endTime: string;
+    startTime?: string;
+    endTime?: string;
     subEntries?: Entry[];
     collapsed?: boolean;
 }
@@ -295,19 +295,19 @@ function startSubEntry(entry: Entry, name: string): void {
     // if this entry is not split yet, we add its time as a sub-entry instead
     if (!entry.subEntries) {
         entry.subEntries = [{ ...entry, name: `Part 1` }];
-        entry.startTime = null;
-        entry.endTime = null;
+        entry.startTime = undefined;
+        entry.endTime = undefined;
     }
 
     if (!name)
         name = `Part ${entry.subEntries.length + 1}`;
-    entry.subEntries.push({ name: name, startTime: moment().toISOString(), endTime: null, subEntries: undefined });
+    entry.subEntries.push({ name: name, startTime: moment().toISOString() });
 }
 
 function startNewEntry(tracker: Tracker, name: string): void {
     if (!name)
         name = `Segment ${tracker.entries.length + 1}`;
-    let entry: Entry = { name: name, startTime: moment().toISOString(), endTime: null, subEntries: undefined };
+    let entry: Entry = { name: name, startTime: moment().toISOString() };
     tracker.entries.push(entry);
 }
 
@@ -359,6 +359,11 @@ function unformatEditableTimestamp(formatted: string, settings: SimpleTimeTracke
 
 function updateLegacyInfo(entries: Entry[]): void {
     for (let entry of entries) {
+        if (entry.startTime == null)
+            entry.startTime = undefined;
+        if (entry.endTime == null)
+            entry.endTime = undefined;
+
         // in 0.1.8, timestamps were changed from unix to iso
         if (entry.startTime && !isNaN(+entry.startTime))
             entry.startTime = moment.unix(+entry.startTime).toISOString();
@@ -626,11 +631,11 @@ class EditableTimestampField extends EditableField {
         return value;
     }
 
-    getTimestamp(): string {
+    getTimestamp(): string | undefined {
         if (this.box.getValue()) {
             return unformatEditableTimestamp(this.box.getValue(), this.settings);
         } else {
-            return null;
+            return undefined;
         }
     }
 }
