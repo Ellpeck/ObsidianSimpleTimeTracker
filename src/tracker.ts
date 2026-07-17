@@ -91,6 +91,11 @@ export function displayTracker(app: App, tracker: Tracker, element: HTMLElement,
         .setPlaceholder("Segment name")
         .setDisabled(running);
     newSegmentNameBox.inputEl.addClass("simple-time-tracker-txt");
+    newSegmentNameBox.inputEl.addEventListener("keydown", async (e: KeyboardEvent) => {
+        if (e.key !== "Enter" || running) return;
+        startNewEntry(tracker, newSegmentNameBox.getValue());
+        await saveTracker(app, tracker, getFile(), getSectionInfo());
+    });
 
     // add timers
     let timeStyle: DomElementInfo = {
