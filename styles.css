@@ -84,3 +84,28 @@
 .simple-time-tracker-table tr:hover {
     background-color: var(--background-modifier-hover);
 }
+
+.simple-time-tracker-drag-handle {
+    cursor: grab;
+    opacity: 0;
+    margin-right: 4px;
+    display: inline-flex;
+    vertical-align: middle;
+    transition: opacity 0.15s;
+}
+
+.simple-time-tracker-table tr:hover .simple-time-tracker-drag-handle {
+    opacity: 0.4;
+}
+
+.simple-time-tracker-row-dragging {
+    opacity: 0.4;
+}
+
+.simple-time-tracker-row-drop-before > td {
+    border-top: 2px solid var(--interactive-accent);
+}
+
+.simple-time-tracker-row-drop-after > td {
+    border-bottom: 2px solid var(--interactive-accent);
+}

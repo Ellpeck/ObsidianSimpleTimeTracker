@@ -1,4 +1,4 @@
-import {moment, MarkdownSectionInformation, ButtonComponent, TextComponent, TFile, MarkdownRenderer, Component, MarkdownRenderChild, App} from "obsidian";
+import {moment, MarkdownSectionInformation, ButtonComponent, TextComponent, TFile, MarkdownRenderer, Component, MarkdownRenderChild, App, setIcon} from "obsidian";
 import {SimpleTimeTrackerSettings} from "./settings";
 import {ConfirmModal} from "./confirm-modal";
 
@@ -129,8 +129,63 @@ export function displayTracker(app: App, tracker: Tracker, element: HTMLElement,
             createEl("th", { text: "Duration" }),
             createEl("th"));
 
-        for (let entry of orderedEntries(tracker.entries, settings))
-            addEditableTableRow(app, tracker, entry, table, newSegmentNameBox, running, getFile, getSectionInfo, settings, 0, component);
+        let displayed = orderedEntries(tracker.entries, settings);
+        let dragSourceIndex: number | null = null;
+
+        for (let i = 0; i < displayed.length; i++) {
+            let row = addEditableTableRow(app, tracker, displayed[i], table, newSegmentNameBox, running, getFile, getSectionInfo, settings, 0, component);
+            row.setAttribute("data-display-index", String(i));
+            row.draggable = true;
+
+            row.addEventListener("dragstart", (e) => {
+                dragSourceIndex = i;
+                row.addClass("simple-time-tracker-row-dragging");
+                e.dataTransfer.effectAllowed = "move";
+            });
+            row.addEventListener("dragend", () => {
+                row.removeClass("simple-time-tracker-row-dragging");
+                table.querySelectorAll(".simple-time-tracker-row-drop-before, .simple-time-tracker-row-drop-after")
+                    .forEach(el => {
+                        el.removeClass("simple-time-tracker-row-drop-before");
+                        el.removeClass("simple-time-tracker-row-drop-after");
+                    });
+            });
+            row.addEventListener("dragover", (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                let rect = row.getBoundingClientRect();
+                let dropAfter = e.clientY > rect.top + rect.height / 2;
+                row.dataset.dropAfter = String(dropAfter);
+                table.querySelectorAll(".simple-time-tracker-row-drop-before, .simple-time-tracker-row-drop-after")
+                    .forEach(el => {
+                        el.removeClass("simple-time-tracker-row-drop-before");
+                        el.removeClass("simple-time-tracker-row-drop-after");
+                    });
+                row.addClass(dropAfter ? "simple-time-tracker-row-drop-after" : "simple-time-tracker-row-drop-before");
+            });
+            row.addEventListener("drop", async (e) => {
+                e.preventDefault();
+                if (dragSourceIndex === null || dragSourceIndex === i) return;
+
+                let insertAfter = row.dataset.dropAfter === "true";
+                let sourceEntry = displayed[dragSourceIndex];
+                let targetEntry = displayed[i];
+
+                tracker.entries.splice(tracker.entries.indexOf(sourceEntry), 1);
+                let targetIndex = tracker.entries.indexOf(targetEntry);
+
+                let spliceIndex: number;
+                if (settings.reverseSegmentOrder) {
+                    spliceIndex = insertAfter ? targetIndex : targetIndex + 1;
+                } else {
+                    spliceIndex = insertAfter ? targetIndex + 1 : targetIndex;
+                }
+                tracker.entries.splice(spliceIndex, 0, sourceEntry);
+
+                dragSourceIndex = null;
+                await saveTracker(app, tracker, getFile(), getSectionInfo());
+            });
+        }
 
         // add copy buttons
         let buttons = element.createEl("div", { cls: "simple-time-tracker-bottom" });
@@ -409,11 +464,16 @@ function createTableSection(entry: Entry, settings: SimpleTimeTrackerSettings, i
     return ret;
 }
 
-function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, trackerRunning: boolean, getFile: GetFile, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number, component: MarkdownRenderChild): void {
+function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HTMLTableElement, newSegmentNameBox: TextComponent, trackerRunning: boolean, getFile: GetFile, getSectionInfo: () => MarkdownSectionInformation, settings: SimpleTimeTrackerSettings, indent: number, component: MarkdownRenderChild): HTMLTableRowElement {
     let entryRunning = getRunningEntry(tracker.entries) == entry;
     let row = table.createEl("tr");
 
     let nameField = new EditableField(row, indent, entry.name);
+    if (indent === 0) {
+        let handle = createEl("span", { cls: "simple-time-tracker-drag-handle" });
+        setIcon(handle, "grip-vertical");
+        nameField.label.prepend(handle);
+    }
     let startField = new EditableTimestampField(row, (entry.startTime), settings);
     let endField = new EditableTimestampField(row, (entry.endTime), settings);
 
@@ -539,6 +599,8 @@ function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HT
         for (let sub of orderedEntries(entry.subEntries, settings))
             addEditableTableRow(app, tracker, sub, table, newSegmentNameBox, trackerRunning, getFile, getSectionInfo, settings, indent + 1, component);
     }
+
+    return row;
 }
 
 function showConfirm(app: App, message: string): Promise<boolean> {
