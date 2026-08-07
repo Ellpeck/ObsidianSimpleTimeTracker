@@ -160,26 +160,32 @@ export function getDuration(entry: Entry): number {
     }
 }
 
+export function getDurationDate(entry: Entry, date: string): number {
+    if (entry.subEntries) return getTotalDurationDate(entry.subEntries, date);
+    if (!entry.startTime) return 0;
+
+    let endTime = entry.endTime ? moment(entry.endTime) : moment();
+    let startTime = moment(entry.startTime);
+
+    const endDayEnd = endTime.clone().endOf("day");
+    const startDayStart = startTime.clone().startOf("day");
+
+    const targetDayStart = moment(date).startOf("day");
+    const targetDayEnd = moment(date).endOf("day");
+
+    const timeFramesDoNotOverlap =
+        endTime.isBefore(targetDayStart) || startDayStart.isAfter(targetDayEnd);
+    if (timeFramesDoNotOverlap) return 0;
+
+    if (startTime.isBefore(targetDayStart)) startTime = targetDayStart;
+    if (endDayEnd.isAfter(targetDayEnd)) endTime = targetDayEnd;
+
+    return endTime.diff(startTime);
+}
+
 export function getDurationToday(entry: Entry): number {
-    if (entry.subEntries) {
-        return getTotalDurationToday(entry.subEntries);
-    } else if (!entry.startTime) {
-        return 0;
-    } else {
-        let today = moment().startOf("day");
-        let endTime = entry.endTime ? moment(entry.endTime) : moment();
-        let startTime = moment(entry.startTime);
-
-        if (endTime.isBefore(today)) {
-            return 0;
-        }
-
-        if (startTime.isBefore(today)) {
-            startTime = today;
-        }
-
-        return endTime.diff(startTime);
-    }
+    const today = moment().format('YYYY-MM-DD');
+    return getDurationDate(entry, today);
 }
 
 export function getTotalDuration(entries: Entry[]): number {
@@ -193,6 +199,13 @@ export function getTotalDurationToday(entries: Entry[]): number {
     let ret = 0;
     for (let entry of entries)
         ret += getDurationToday(entry);
+    return ret;
+}
+
+export function getTotalDurationDate(entries: Entry[], date: string): number {
+    let ret = 0;
+    for (let entry of entries)
+        ret += getDurationDate(entry, date);
     return ret;
 }
 

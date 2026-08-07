@@ -1,0 +1,31 @@
+```dataviewjs
+// get the time tracker plugin api instance
+let api = dv.app.plugins.plugins["simple-time-tracker"].api;
+
+for (let page of dv.pages()) {
+    // load trackers in the file with the given path
+    let trackers = await api.loadAllTrackers(page.file.path);
+
+    if (!trackers.length) continue;
+
+    for (let { section, tracker } of trackers) {
+        // print the total duration of the tracker
+        let duration = api.getTotalDurationDate(tracker.entries, '1811-11-11');
+        if(duration > 0){
+	        dv.el("p", page.file.link);
+	        dv.el("p", api.formatDuration(duration));  
+	    }
+    }
+}
+```
+
+
+```simple-time-tracker
+{"entries":[{"name":"Segment 1","startTime":"1811-11-11T11:40:44.000Z","endTime":"1811-11-11T18:40:44.000Z"},{"name":"Segment 2","startTime":"2026-06-16T21:37:24.015Z","endTime":"2026-06-16T21:37:27.887Z"}]}
+```
+
+```simple-time-tracker
+{"entries":[{"name":"Segment 1","startTime":"1811-11-10T11:40:44.000Z","endTime":"1811-11-14T18:40:44.000Z"}]}
+```
+
+
