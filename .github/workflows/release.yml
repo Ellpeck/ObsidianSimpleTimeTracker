@@ -2,7 +2,7 @@ on:
   push:
     tags: ["*"]
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
