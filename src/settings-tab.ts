@@ -97,6 +97,17 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
                 });
             }));
 
+        group.addSetting(s => void s
+            .setName("Pretty-print tracker data")
+            .setDesc("Whether tracker code block content should be pretty-printed, which increases note file size but makes merging sync changes easier.")
+            .addToggle(t => {
+                void t.setValue(this.plugin.settings.prettyPrintJson);
+                void t.onChange(async v => {
+                    this.plugin.settings.prettyPrintJson = v;
+                    await this.plugin.saveSettings();
+                });
+            }));
+
         this.containerEl.createEl("hr");
         this.containerEl.createEl("p", { text: "Need help using the plugin? Feel free to join the Discord server!" });
         this.containerEl.createEl("a", { href: "https://link.ellpeck.de/discordweb" }).createEl("img", {

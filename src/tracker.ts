@@ -14,7 +14,7 @@ export interface Entry {
     collapsed?: boolean;
 }
 
-export async function saveTracker(app: App, tracker: Tracker, fileName: string, section: MarkdownSectionInformation): Promise<void> {
+export async function saveTracker(app: App, tracker: Tracker, fileName: string, section: MarkdownSectionInformation, settings: SimpleTimeTrackerSettings): Promise<void> {
     let file = app.vault.getAbstractFileByPath(fileName);
     if (!(file instanceof TFile))
         return;
@@ -25,7 +25,7 @@ export async function saveTracker(app: App, tracker: Tracker, fileName: string, 
     let prev = lines.filter((_, i) => i <= section.lineStart).join("\n");
     let next = lines.filter((_, i) => i >= section.lineEnd).join("\n");
     // edit only the code block content, leave the rest untouched
-    content = `${prev}\n${JSON.stringify(tracker)}\n${next}`;
+    content = `${prev}\n${JSON.stringify(tracker, null, settings.prettyPrintJson ? 2 : undefined)}\n${next}`;
 
     await app.vault.modify(file, content);
 }
@@ -86,7 +86,7 @@ export function displayTracker(app: App, tracker: Tracker, element: HTMLElement,
             } else {
                 startNewEntry(tracker, newSegmentNameBox.getValue());
             }
-            await saveTracker(app, tracker, getFile(), getSectionInfo());
+            await saveTracker(app, tracker, getFile(), getSectionInfo(), settings);
         });
     btn.buttonEl.addClass("simple-time-tracker-btn");
     let newSegmentNameBox = new TextComponent(element)
@@ -97,7 +97,7 @@ export function displayTracker(app: App, tracker: Tracker, element: HTMLElement,
         if (e.key === "Enter" && !running) {
             e.preventDefault();
             startNewEntry(tracker, newSegmentNameBox.getValue());
-            void saveTracker(app, tracker, getFile(), getSectionInfo());
+            void saveTracker(app, tracker, getFile(), getSectionInfo(), settings);
         }
     });
 
@@ -454,7 +454,7 @@ function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HT
             } else {
                 entry.collapsed = true;
             }
-            await saveTracker(app, tracker, getFile(), getSectionInfo());
+            await saveTracker(app, tracker, getFile(), getSectionInfo(), settings);
         });
     if (!entry.subEntries)
         expandButton.buttonEl.setCssProps({ visibility: "hidden" })
@@ -475,7 +475,7 @@ function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HT
             } else {
                 startSubEntry(entry, newSegmentNameBox.getValue());
             }
-            await saveTracker(app, tracker, getFile(), getSectionInfo());
+            await saveTracker(app, tracker, getFile(), getSectionInfo(), settings);
         });
     let editButton = new ButtonComponent(entryButtons)
         .setClass("clickable-icon")
@@ -509,7 +509,7 @@ function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HT
             endField.endEdit();
             entry.endTime = endField.getTimestamp();
         }
-        await saveTracker(app, tracker, getFile(), getSectionInfo());
+        await saveTracker(app, tracker, getFile(), getSectionInfo(), settings);
         void editButton.setIcon("lucide-pencil");
         renderNameAsMarkdown(app, nameField.label, getFile, component);
     }
@@ -551,7 +551,7 @@ function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HT
             if (!confirmed)
                 return;
             removeEntry(tracker.entries, entry);
-            await saveTracker(app, tracker, getFile(), getSectionInfo());
+            await saveTracker(app, tracker, getFile(), getSectionInfo(), settings);
         });
 
     if (entry.subEntries && !entry.collapsed) {

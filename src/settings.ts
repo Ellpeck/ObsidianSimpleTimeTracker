@@ -6,11 +6,11 @@ export const defaultSettings: SimpleTimeTrackerSettings = {
     reverseSegmentOrder: false,
     timestampDurations: false,
     showToday: false,
-    useMonospacedFont: false
+    useMonospacedFont: false,
+    prettyPrintJson: false
 };
 
 export interface SimpleTimeTrackerSettings {
-
     timestampFormat: string;
     editableTimestampFormat: string;
     csvDelimiter: string;
@@ -19,4 +19,5 @@ export interface SimpleTimeTrackerSettings {
     timestampDurations: boolean;
     showToday: boolean;
     useMonospacedFont: boolean;
+    prettyPrintJson: boolean;
 }

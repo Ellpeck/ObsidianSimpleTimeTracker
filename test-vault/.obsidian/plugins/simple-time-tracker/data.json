@@ -6,5 +6,6 @@
   "reverseSegmentOrder": false,
   "timestampDurations": true,
   "showToday": true,
-  "useMonospacedFont": false
+  "useMonospacedFont": false,
+  "prettyPrintJson": true
 }
