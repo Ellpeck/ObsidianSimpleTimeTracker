@@ -5,6 +5,7 @@ import {displayTracker, Entry, formatDuration, formatTimestamp, getDuration, get
 
 export default class SimpleTimeTrackerPlugin extends Plugin {
 
+    // noinspection JSUnusedGlobalSymbols
     public api = {
         // verbatim versions of the functions found in tracker.ts with the same parameters
         loadTracker, getDuration, getTotalDuration, getDurationToday, getTotalDurationToday, getRunningEntry, isRunning, getTotalDurationDate,
@@ -15,7 +16,7 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
         formatDuration: (totalTime: number) => formatDuration(totalTime, this.settings),
         orderedEntries: (entries: Entry[]) => orderedEntries(entries, this.settings)
     };
-    public settings: SimpleTimeTrackerSettings;
+    public settings!: SimpleTimeTrackerSettings;
 
     async onload(): Promise<void> {
         await this.loadSettings();
@@ -38,13 +39,13 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
                 }
             }));
 
-            displayTracker(this.app, tracker, e, getFile, () => i.getSectionInfo(e), this.settings, component);
+            displayTracker(this.app, tracker, e, getFile, () => i.getSectionInfo(e)!, this.settings, component);
             i.addChild(component);
         });
 
         this.addCommand({
             id: `insert`,
-            name: `Insert Time Tracker`,
+            name: `Insert time tracker`,
             editorCallback: (e, _) => {
                 e.replaceSelection("```simple-time-tracker\n```\n");
             }
@@ -52,7 +53,7 @@ export default class SimpleTimeTrackerPlugin extends Plugin {
     }
 
     async loadSettings(): Promise<void> {
-        this.settings = Object.assign({}, defaultSettings, await this.loadData());
+        this.settings = Object.assign({}, defaultSettings, await this.loadData() as Partial<SimpleTimeTrackerSettings>);
     }
 
     async saveSettings(): Promise<void> {

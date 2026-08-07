@@ -15,8 +15,8 @@ export interface Entry {
 }
 
 export async function saveTracker(app: App, tracker: Tracker, fileName: string, section: MarkdownSectionInformation): Promise<void> {
-    let file = app.vault.getAbstractFileByPath(fileName) as TFile;
-    if (!file)
+    let file = app.vault.getAbstractFileByPath(fileName);
+    if (!(file instanceof TFile))
         return;
     let content = await app.vault.read(file);
 
@@ -33,11 +33,11 @@ export async function saveTracker(app: App, tracker: Tracker, fileName: string, 
 export function loadTracker(json: string): Tracker {
     if (json) {
         try {
-            let ret = JSON.parse(json);
+            let ret = JSON.parse(json) as Tracker;
             updateLegacyInfo(ret.entries);
             return ret;
         } catch (e) {
-            console.log(`Failed to parse Tracker from ${json}`);
+            console.error(`Failed to parse Tracker from ${json}: ${(e as Error).message}`);
         }
     }
     return { entries: [] };
@@ -45,18 +45,20 @@ export function loadTracker(json: string): Tracker {
 
 export async function loadAllTrackers(app: App, fileName: string): Promise<{ section: MarkdownSectionInformation, tracker: Tracker }[]> {
     let file = app.vault.getAbstractFileByPath(fileName);
-    let content = (await app.vault.cachedRead(file as TFile)).split("\n");
+    if (!(file instanceof TFile))
+        return [];
+    let content = (await app.vault.cachedRead(file)).split("\n");
 
     let trackers: { section: MarkdownSectionInformation, tracker: Tracker }[] = [];
     let curr: Partial<MarkdownSectionInformation> | undefined;
     for (let i = 0; i < content.length; i++) {
-        let line = content[i];
+        let line = content[i]!;
         if (line.trimEnd() == "```simple-time-tracker") {
             curr = { lineStart: i + 1, text: "" };
         } else if (curr) {
             if (line.trimEnd() == "```") {
                 curr.lineEnd = i - 1;
-                let tracker = loadTracker(curr.text);
+                let tracker = loadTracker(curr.text!);
                 trackers.push({ section: curr as MarkdownSectionInformation, tracker: tracker });
                 curr = undefined;
             } else {
@@ -100,18 +102,18 @@ export function displayTracker(app: App, tracker: Tracker, element: HTMLElement,
         }
     };
     let timer = element.createDiv({ cls: "simple-time-tracker-timers" });
-    let currentDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
-    let current = currentDiv.createEl("span", timeStyle);
-    currentDiv.createEl("span", { text: "Current" });
-    let totalDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
-    let total = totalDiv.createEl("span", timeStyle);
-    totalDiv.createEl("span", { text: "Total" });
+    let currentDiv = timer.createDiv({ cls: "simple-time-tracker-timer" });
+    let current = currentDiv.createSpan(timeStyle);
+    currentDiv.createSpan({ text: "Current" });
+    let totalDiv = timer.createDiv({ cls: "simple-time-tracker-timer" });
+    let total = totalDiv.createSpan(timeStyle);
+    totalDiv.createSpan({ text: "Total" });
 
-    let totalToday: HTMLElement;
+    let totalToday!: HTMLElement;
     if (settings.showToday) {
-        let totalTodayDiv = timer.createEl("div", { cls: "simple-time-tracker-timer" });
-        totalToday = totalTodayDiv.createEl("span", timeStyle);
-        totalTodayDiv.createEl("span", { text: "Today" });
+        let totalTodayDiv = timer.createDiv({ cls: "simple-time-tracker-timer" });
+        totalToday = totalTodayDiv.createSpan(timeStyle);
+        totalTodayDiv.createSpan({ text: "Today" });
     }
 
     if (tracker.entries.length > 0) {
@@ -128,11 +130,11 @@ export function displayTracker(app: App, tracker: Tracker, element: HTMLElement,
             addEditableTableRow(app, tracker, entry, table, newSegmentNameBox, running, getFile, getSectionInfo, settings, 0, component);
 
         // add copy buttons
-        let buttons = element.createEl("div", { cls: "simple-time-tracker-bottom" });
-        new ButtonComponent(buttons)
+        let buttons = element.createDiv({ cls: "simple-time-tracker-bottom" });
+        void new ButtonComponent(buttons)
             .setButtonText("Copy as table")
             .onClick(() => navigator.clipboard.writeText(createMarkdownTable(tracker, settings)));
-        new ButtonComponent(buttons)
+        void new ButtonComponent(buttons)
             .setButtonText("Copy as CSV")
             .onClick(() => navigator.clipboard.writeText(createCsv(tracker, settings)));
     }
@@ -213,7 +215,7 @@ export function isRunning(tracker: Tracker): boolean {
     return !!getRunningEntry(tracker.entries);
 }
 
-export function getRunningEntry(entries: Entry[]): Entry {
+export function getRunningEntry(entries: Entry[]): Entry | undefined {
     for (let entry of entries) {
         // if this entry has sub entries, check if one of them is running
         if (entry.subEntries) {
@@ -226,7 +228,7 @@ export function getRunningEntry(entries: Entry[]): Entry {
                 return entry;
         }
     }
-    return null;
+    return undefined;
 }
 
 export function createMarkdownTable(tracker: Tracker, settings: SimpleTimeTrackerSettings): string {
@@ -237,15 +239,15 @@ export function createMarkdownTable(tracker: Tracker, settings: SimpleTimeTracke
 
     let ret = "";
     // calculate the width every column needs to look neat when monospaced
-    let widths = Array.from(Array(4).keys()).map(i => Math.max(...table.map(a => a[i].length)));
+    let widths = Array.from(Array(4).keys()).map(i => Math.max(...table.map(a => a[i]!.length)));
     for (let r = 0; r < table.length; r++) {
         // add separators after first row
         if (r == 1)
-            ret += "| " + Array.from(Array(4).keys()).map(i => "-".repeat(widths[i])).join(" | ") + " |\n";
+            ret += "| " + Array.from(Array(4).keys()).map(i => "-".repeat(widths[i]!)).join(" | ") + " |\n";
 
         let row: string[] = [];
         for (let i = 0; i < 4; i++)
-            row.push(table[r][i].padEnd(widths[i], " "));
+            row.push(table[r]![i]!.padEnd(widths[i]!, " "));
         ret += "| " + row.join(" | ") + " |\n";
     }
     return ret;
@@ -326,7 +328,8 @@ function startNewEntry(tracker: Tracker, name: string): void {
 
 function endRunningEntry(tracker: Tracker): void {
     let entry = getRunningEntry(tracker.entries);
-    entry.endTime = moment().toISOString();
+    if (entry)
+        entry.endTime = moment().toISOString();
 }
 
 function removeEntry(entries: Entry[], toRemove: Entry): boolean {
@@ -338,7 +341,7 @@ function removeEntry(entries: Entry[], toRemove: Entry): boolean {
             if (entry.subEntries && removeEntry(entry.subEntries, toRemove)) {
                 // if we only have one sub entry remaining, we can merge back into our main entry
                 if (entry.subEntries.length == 1) {
-                    let single = entry.subEntries[0];
+                    let single = entry.subEntries[0]!;
                     entry.startTime = single.startTime;
                     entry.endTime = single.endTime;
                     entry.subEntries = undefined;
@@ -427,8 +430,8 @@ function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HT
     let row = table.createEl("tr");
 
     let nameField = new EditableField(row, indent, entry.name);
-    let startField = new EditableTimestampField(row, (entry.startTime), settings);
-    let endField = new EditableTimestampField(row, (entry.endTime), settings);
+    let startField = new EditableTimestampField(row, entry.startTime!, settings);
+    let endField = new EditableTimestampField(row, entry.endTime!, settings);
 
     row.createEl("td", { text: entry.endTime || entry.subEntries ? formatDuration(getDuration(entry), settings) : "" });
 
@@ -447,11 +450,11 @@ function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HT
             await saveTracker(app, tracker, getFile(), getSectionInfo());
         });
     if (!entry.subEntries)
-        expandButton.buttonEl.style.visibility = "hidden";
+        expandButton.buttonEl.setCssProps({ visibility: "hidden" })
 
     let entryButtons = row.createEl("td");
     entryButtons.addClass("simple-time-tracker-table-buttons");
-    new ButtonComponent(entryButtons)
+    void new ButtonComponent(entryButtons)
         .setClass("clickable-icon")
         .setIcon(`lucide-${entryRunning ? "square" : "play"}`)
         .setTooltip(entryRunning ? "End" : "Continue")
@@ -476,9 +479,9 @@ function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HT
         });
 
     // Add double-click to edit functionality
-    nameField.label.addEventListener("dblclick", async () => {
+    nameField.label.addEventListener("dblclick", () => {
         if (!nameField.editing()) {
-            await handleEdit();
+            void handleEdit();
         }
     });
 
@@ -492,7 +495,7 @@ function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HT
 
     async function saveChanges() {
         entry.name = nameField.endEdit();
-        expandButton.buttonEl.style.display = null;
+        expandButton.buttonEl.style.display = null as unknown as string;
         startField.endEdit();
         entry.startTime = startField.getTimestamp();
         if (!entryRunning) {
@@ -500,20 +503,20 @@ function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HT
             entry.endTime = endField.getTimestamp();
         }
         await saveTracker(app, tracker, getFile(), getSectionInfo());
-        editButton.setIcon("lucide-pencil");
+        void editButton.setIcon("lucide-pencil");
         renderNameAsMarkdown(app, nameField.label, getFile, component);
     }
 
     function startEditing() {
         nameField.beginEdit(entry.name, true);
-        expandButton.buttonEl.style.display = "none";
+        expandButton.buttonEl.setCssProps({ display: "none" });
         // only allow editing start and end times if we don't have sub entries
         if (!entry.subEntries) {
-            startField.beginEdit(entry.startTime);
+            startField.beginEdit(entry.startTime!);
             if (!entryRunning)
-                endField.beginEdit(entry.endTime);
+                endField.beginEdit(entry.endTime!);
         }
-        editButton.setIcon("lucide-check");
+        void editButton.setIcon("lucide-check");
 
         // Set up save/cancel handlers for keyboard shortcuts
         nameField.onSave = startField.onSave = endField.onSave = async () => {
@@ -526,24 +529,20 @@ function addEditableTableRow(app: App, tracker: Tracker, entry: Entry, table: HT
             if (!entryRunning) {
                 endField.endEdit();
             }
-            expandButton.buttonEl.style.display = null;
-            editButton.setIcon("lucide-pencil");
+            expandButton.buttonEl.style.display = null as unknown as string;
+            void editButton.setIcon("lucide-pencil");
         };
     }
 
-    new ButtonComponent(entryButtons)
+    void new ButtonComponent(entryButtons)
         .setClass("clickable-icon")
         .setTooltip("Remove")
         .setIcon("lucide-trash")
         .setDisabled(entryRunning)
         .onClick(async () => {
-
             const confirmed = await showConfirm(app, "Are you sure you want to delete this entry?");
-
-            if (!confirmed) {
+            if (!confirmed)
                 return;
-            }
-
             removeEntry(tracker.entries, entry);
             await saveTracker(app, tracker, getFile(), getSectionInfo());
         });
@@ -565,7 +564,7 @@ function renderNameAsMarkdown(app: App, label: HTMLSpanElement, getFile: GetFile
     // we don't have to wait here since async code only occurs when a file needs to be loaded (like a linked image)
     void MarkdownRenderer.render(app, label.innerHTML, label, getFile(), component);
     // rendering wraps it in a paragraph
-    let p = label.querySelector("p");
+    let p = label.querySelector("p")!;
     label.replaceChildren(...Array.from(p.childNodes));
 }
 
@@ -574,12 +573,12 @@ class EditableField {
     cell: HTMLTableCellElement;
     label: HTMLSpanElement;
     box: TextComponent;
-    onSave?: () => void;
-    onCancel?: () => void;
+    onSave?: () => Promise<void> | void;
+    onCancel?: () => Promise<void> | void;
 
     constructor(row: HTMLTableRowElement, indent: number, value: string) {
         this.cell = row.createEl("td");
-        this.label = this.cell.createEl("span", { text: value });
+        this.label = this.cell.createSpan({ text: value });
         this.label.style.marginLeft = `${indent}em`;
         this.box = new TextComponent(this.cell).setValue(value);
         this.box.inputEl.addClass("simple-time-tracker-input");
@@ -588,12 +587,12 @@ class EditableField {
             // Save with Ctrl/Cmd + Enter
             if (e.key === "Enter") {
                 e.preventDefault();
-                this.onSave?.();
+                void this.onSave?.();
             }
             // Cancel with Escape
             if (e.key === "Escape") {
                 e.preventDefault();
-                this.onCancel?.();
+                void this.onCancel?.();
             }
         });
     }
@@ -604,7 +603,7 @@ class EditableField {
 
     beginEdit(value: string, focus = false): void {
         this.label.hidden = true;
-        this.box.setValue(value);
+        void this.box.setValue(value);
         this.box.inputEl.show();
         if (focus)
             this.box.inputEl.focus();

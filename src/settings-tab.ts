@@ -1,4 +1,4 @@
-import {App, PluginSettingTab, Setting, SettingGroup} from "obsidian";
+import {App, PluginSettingTab, SettingGroup} from "obsidian";
 import SimpleTimeTrackerPlugin from "./main";
 import {defaultSettings} from "./settings";
 
@@ -16,82 +16,82 @@ export class SimpleTimeTrackerSettingsTab extends PluginSettingTab {
         this.containerEl.empty();
 
         let group = new SettingGroup(this.containerEl);
-        group.addSetting(s => s
-            .setName("Timestamp Display Format")
+        group.addSetting(s => void s
+            .setName("Timestamp display format")
             .setDesc(createFragment(f => {
                 f.createSpan({ text: "The way that timestamps in time tracker tables should be displayed. Uses " });
                 f.createEl("a", { text: "moment.js", href: "https://momentjs.com/docs/#/parsing/string-format/" });
                 f.createSpan({ text: " syntax." });
             }))
             .addText(t => {
-                t.setValue(String(this.plugin.settings.timestampFormat));
-                t.onChange(async v => {
+                void t.setValue(String(this.plugin.settings.timestampFormat));
+                void t.onChange(async v => {
                     this.plugin.settings.timestampFormat = v.length ? v : defaultSettings.timestampFormat;
                     await this.plugin.saveSettings();
                 });
             }));
 
-        group.addSetting(s => s
-            .setName("CSV Delimiter")
+        group.addSetting(s => void s
+            .setName("CSV delimiter")
             .setDesc("The delimiter character that should be used when copying a tracker table as CSV. For example, some languages use a semicolon instead of a comma.")
             .addText(t => {
-                t.setValue(String(this.plugin.settings.csvDelimiter));
-                t.onChange(async v => {
+                void t.setValue(String(this.plugin.settings.csvDelimiter));
+                void t.onChange(async v => {
                     this.plugin.settings.csvDelimiter = v.length ? v : defaultSettings.csvDelimiter;
                     await this.plugin.saveSettings();
                 });
             }));
 
-        group.addSetting(s => s
-            .setName("Fine-Grained Durations")
+        group.addSetting(s => void s
+            .setName("Fine-grained durations")
             .setDesc("Whether durations should include days, months and years. If this is disabled, additional time units will be displayed as part of the hours.")
             .addToggle(t => {
-                t.setValue(this.plugin.settings.fineGrainedDurations);
-                t.onChange(async v => {
+                void t.setValue(this.plugin.settings.fineGrainedDurations);
+                void t.onChange(async v => {
                     this.plugin.settings.fineGrainedDurations = v;
                     await this.plugin.saveSettings();
                 });
             }));
 
-        group.addSetting(s => s
-            .setName("Timestamp Durations")
+        group.addSetting(s => void s
+            .setName("Timestamp durations")
             .setDesc("Whether durations should be displayed in a timestamp format (12:15:01) rather than the default duration format (12h 15m 1s).")
             .addToggle(t => {
-                t.setValue(this.plugin.settings.timestampDurations);
-                t.onChange(async v => {
+                void t.setValue(this.plugin.settings.timestampDurations);
+                void t.onChange(async v => {
                     this.plugin.settings.timestampDurations = v;
                     await this.plugin.saveSettings();
                 });
             }));
 
-        group.addSetting(s => s
-            .setName("Display Segments in Reverse Order")
+        group.addSetting(s => void s
+            .setName("Display segments in reverse order")
             .setDesc("Whether older tracker segments should be displayed towards the bottom of the tracker, rather than the top.")
             .addToggle(t => {
-                t.setValue(this.plugin.settings.reverseSegmentOrder);
-                t.onChange(async v => {
+                void t.setValue(this.plugin.settings.reverseSegmentOrder);
+                void t.onChange(async v => {
                     this.plugin.settings.reverseSegmentOrder = v;
                     await this.plugin.saveSettings();
                 });
             }));
 
-        group.addSetting(s => s
-            .setName("Show Total Today")
+        group.addSetting(s => void s
+            .setName("Show total today")
             .setDesc("Whether the total time spent today should be displayed in the tracker table.")
             .addToggle(t => {
-                t.setValue(this.plugin.settings.showToday);
-                t.onChange(async v => {
+                void t.setValue(this.plugin.settings.showToday);
+                void t.onChange(async v => {
                     this.plugin.settings.showToday = v;
                     await this.plugin.saveSettings();
                 });
             }));
 
-        group.addSetting(s => s
-            .setName("Use Monospaced Font for Times")
+        group.addSetting(s => void s
+            .setName("Use monospaced font for times")
             .setDesc("Whether your configured monospaced font should be used for the times in the title, causing them to jump around less while counting up.")
             .addToggle(t => {
-                t.setValue(this.plugin.settings.useMonospacedFont);
-                t.onChange(async v => {
+                void t.setValue(this.plugin.settings.useMonospacedFont);
+                void t.onChange(async v => {
                     this.plugin.settings.useMonospacedFont = v;
                     await this.plugin.saveSettings();
                 });

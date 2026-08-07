@@ -1,6 +1,7 @@
 ```dataviewjs
 // get the time tracker plugin api instance
 let api = dv.app.plugins.plugins["simple-time-tracker"].api;
+        console.log(api);
 
 for (let page of dv.pages()) {
     // load trackers in the file with the given path
@@ -21,7 +22,7 @@ for (let page of dv.pages()) {
 
 
 ```simple-time-tracker
-{"entries":[{"name":"Segment 1","startTime":"1811-11-11T11:40:44.000Z","endTime":"1811-11-11T18:40:44.000Z"},{"name":"Segment 2","startTime":"2026-06-16T21:37:24.015Z","endTime":"2026-06-16T21:37:27.887Z"}]}
+{"entries":[{"name":"Segment 1","startTime":"1811-11-11T11:40:44.000Z","endTime":"1811-11-11T18:40:44.000Z"},{"name":"Segment 2","startTime":"2026-06-16T21:37:24.015Z","endTime":"2026-06-16T21:37:27.887Z"},{"name":"Segment 3","startTime":"2026-08-07T19:59:29.072Z","endTime":"2026-08-07T19:59:31.433Z"}]}
 ```
 
 ```simple-time-tracker

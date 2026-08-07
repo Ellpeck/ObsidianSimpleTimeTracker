@@ -1,48 +1,46 @@
-import { App, Modal, Setting } from "obsidian";
+import {App, Modal, Setting} from "obsidian";
 
 export class ConfirmModal extends Modal {
-	// Message to show in the modal
-	message: string;
+    // Message to show in the modal
+    message: string;
 
-	// Callback to run on user choice
-	callback: (choice: boolean) => void;
+    // Callback to run on user choice
+    callback: (choice: boolean) => void;
 
-	// Whether an option was picked
-	picked: boolean;
+    // Whether an option was picked
+    picked: boolean = false;
 
-	constructor(app: App, message: string, callback: (choice: boolean) => void) {
-		super(app);
-		this.message = message;
-		this.callback = callback;
-	}
+    constructor(app: App, message: string, callback: (choice: boolean) => void) {
+        super(app);
+        this.message = message;
+        this.callback = callback;
+    }
 
-	onOpen(): void {
-		const { contentEl } = this;
-		contentEl.createEl("p", { text: this.message });
+    onOpen(): void {
+        const { contentEl } = this;
+        contentEl.createEl("p", { text: this.message });
 
-		new Setting(contentEl)
-			.addButton((btn) =>
-				btn
-					.setButtonText("Ok")
-					.setCta()
-					.onClick(() => {
-						this.picked = true;
-						this.close();
-						this.callback(true);
-					})
-			)
-			.addButton((btn) =>
-				btn.setButtonText("Cancel").onClick(() => {
-					this.picked = true;
-					this.close();
-					this.callback(false);
-				})
-			);
-	}
+        void new Setting(contentEl)
+            .addButton(btn => btn
+                .setButtonText("OK")
+                .setCta()
+                .onClick(() => {
+                    this.picked = true;
+                    this.close();
+                    this.callback(true);
+                }))
+            .addButton(btn => btn
+                .setButtonText("Cancel")
+                .onClick(() => {
+                    this.picked = true;
+                    this.close();
+                    this.callback(false);
+                }));
+    }
 
-	onClose(): void {
-		if (!this.picked) {
-			this.callback(false);
-		}
-	}
+    onClose(): void {
+        if (!this.picked) {
+            this.callback(false);
+        }
+    }
 }

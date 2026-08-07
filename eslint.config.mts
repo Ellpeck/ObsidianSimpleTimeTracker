@@ -13,6 +13,7 @@ export default defineConfig(
         'package.json',
         'package-lock.json',
         'tsconfig.json',
+        "test-vault"
     ]),
     {
         languageOptions: {
